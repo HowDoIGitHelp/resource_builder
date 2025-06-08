@@ -20,6 +20,7 @@ class StrongSentence(Sentence):
         return str(self.__sentence)
     def importantParts(self) -> str:
         return self.__sentence.importantParts() + self.__strongParts
+
 class EmphasizedSentence(Sentence):
     def __init__(self,sentence:Sentence,emphasizedParts:list):
         self.__sentence = sentence
@@ -50,8 +51,10 @@ def collapse(patternList:list, strongParts:list=[], emphasizedParts:list=[]) -> 
     Accepts a list of content patterns and returns Sentence
     '''
     cumulativeStr:str = ''
-    strongTemplate:Template = Template('\\textbf{$strongtext}')
-    emphasizedTemplate:Template = Template('\\em{$emtext}')
+    strongTemplate:Template = Template('\\textbf{$strongText}')
+    emphasizedTemplate:Template = Template('\\emph{$emText}')
+    mathTemplate:Template = Template('\\($inlineMath\\)')
+    codeTemplate:Tempalte = Template('\\texttt{$inlineCode}')
 
     for pattern in patternList:
         if pattern['t'] == 'Str':
@@ -60,13 +63,16 @@ def collapse(patternList:list, strongParts:list=[], emphasizedParts:list=[]) -> 
             cumulativeStr += ' '
         elif pattern['t'] == 'Strong':
             strong = collapse(pattern['c'], strongParts=strongParts, emphasizedParts=emphasizedParts) 
-            #print(strong)
-            cumulativeStr += strongTemplate.substitute(strongtext=str(strong)) 
+            cumulativeStr += strongTemplate.substitute(strongText=str(strong)) 
             strongParts.append(str(strong))
         elif pattern['t'] == 'Emph':
             emphasis = collapse(pattern['c'], strongParts=strongParts, emphasizedParts=emphasizedParts)
-            cumulativeStr += emphasizedTemplate.substitute(emtext=str(emphasis)) 
+            cumulativeStr += emphasizedTemplate.substitute(emText=str(emphasis)) 
             emphasizedParts.append(str(emphasis))
+        elif pattern['t'] == 'Math' and pattern['c'][0]['t'] == 'InlineMath':
+            cumulativeStr += mathTemplate.substitute(inlineMath=pattern['c'][1])
+        elif pattern['t'] == 'Code':
+            cumulativeStr += codeTemplate.substitute(inlineCode=pattern['c'][1].replace(' ','\\ '))
 
     sentence = Sentence(cumulativeStr)
     if len(strongParts) > 0:
