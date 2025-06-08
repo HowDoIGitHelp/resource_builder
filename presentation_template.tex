@@ -1,0 +1,28 @@
+\documentclass{beamer}
+%Information to be included in the title page:
+\title{Sample title}
+\author{Anonymous}
+\institute{Overleaf}
+\date{2021}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}
+\frametitle{Sample frame title}
+This is some text in the first frame. This is some text in the first frame. This is some text in the first frame.
+\end{frame}
+
+\begin{frame}
+\hypertarget{code}{%
+\section{code}\label{code}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ControlFlowTok{for}\NormalTok{ i }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(}\DecValTok{10}\NormalTok{):}
+    \BuiltInTok{print}\NormalTok{(i}\OperatorTok{*}\NormalTok{i)}
+\end{Highlighting}
+\end{Shaded}
+\end{frame}
+\end{document}

@@ -51,10 +51,10 @@ def collapse(patternList:list, strongParts:list=[], emphasizedParts:list=[]) -> 
     Accepts a list of content patterns and returns Sentence
     '''
     cumulativeStr:str = ''
-    strongTemplate:Template = Template('\\textbf{$strongText}')
-    emphasizedTemplate:Template = Template('\\emph{$emText}')
-    mathTemplate:Template = Template('\\($inlineMath\\)')
-    codeTemplate:Tempalte = Template('\\texttt{$inlineCode}')
+    strongTemplate:Template = Template('**$strongText**')
+    emphasizedTemplate:Template = Template('*$emText*')
+    mathTemplate:Template = Template('$$$inlineMath$$')
+    codeTemplate:Tempalte = Template('`$inlineCode`')
 
     for pattern in patternList:
         if pattern['t'] == 'Str':
@@ -72,7 +72,7 @@ def collapse(patternList:list, strongParts:list=[], emphasizedParts:list=[]) -> 
         elif pattern['t'] == 'Math' and pattern['c'][0]['t'] == 'InlineMath':
             cumulativeStr += mathTemplate.substitute(inlineMath=pattern['c'][1])
         elif pattern['t'] == 'Code':
-            cumulativeStr += codeTemplate.substitute(inlineCode=pattern['c'][1].replace(' ','\\ '))
+            cumulativeStr += codeTemplate.substitute(inlineCode=pattern['c'][1])
 
     sentence = Sentence(cumulativeStr)
     if len(strongParts) > 0:
