@@ -28,7 +28,23 @@ class EmphasizedSentence(Sentence):
         return str(self.__sentence)
     def importantParts(self) -> list:
         return self.__sentence.importantParts() + self.__emphasizedParts
+
+def splitParagraph(paragraph:dict) -> list:
+    '''
+    Splits a paragraph into a lines based on SoftBreaks in the ast
+    '''
+    lineList:list = []
+    line:list = []
+    for d in paragraph['c']:
+        if d['t'] == 'SoftBreak':
+            lineList.append(line)
+            line = []
+        else:
+            line.append(d)
+    lineList.append(line)
     
+    return lineList
+
 def collapse(patternList:list, strongParts:list=[], emphasizedParts:list=[]) -> Sentence:
     '''
     Accepts a list of content patterns and returns Sentence
