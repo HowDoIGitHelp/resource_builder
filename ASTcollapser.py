@@ -9,28 +9,27 @@ class Sentence:
         self.__sentence = sentence
     def __str__(self) -> str:
         return str(self.__sentence)
-    def briefString(self) -> str:
-        return '' 
+    def importantParts(self) -> list:
+        return [] 
 
 class StrongSentence(Sentence):
-    def __init__(self,sentence:Sentence, strongPart:str):
+    def __init__(self,sentence:Sentence, strongParts:list):
         self.__sentence = sentence
-        self.__strongPart = strongPart
+        self.__strongParts = strongParts
     def __str__(self) -> str:
         return str(self.__sentence)
-    def briefString(self) -> str:
-        return f"{self.__sentence.briefString()}, {self.strongPart}" 
-
+    def importantParts(self) -> str:
+        return self.__sentence.importantParts() + self.__strongParts
 class EmphasizedSentence(Sentence):
-    def __init__(self,sentence:Sentence,emphasizedPart):
+    def __init__(self,sentence:Sentence,emphasizedParts:list):
         self.__sentence = sentence
-        self.__emphasizedPart = emphasizedPart
+        self.__emphasizedParts = emphasizedParts
     def __str__(self) -> str:
         return str(self.__sentence)
-    def briefString(self) -> str:
-        return f"{self.__sentence.briefString()}, {self.__emphasizedPart}" 
-
-def collapse(patternList:list, hasStrong:bool=False, hasEmphasis:bool=False) -> Sentence:
+    def importantParts(self) -> list:
+        return self.__sentence.importantParts() + self.__emphasizedParts
+    
+def collapse(patternList:list, strongParts:list=[], emphasizedParts:list=[]) -> Sentence:
     '''
     Accepts a list of content patterns and returns Sentence
     '''
@@ -44,15 +43,20 @@ def collapse(patternList:list, hasStrong:bool=False, hasEmphasis:bool=False) -> 
         elif pattern['t'] == 'Space':
             cumulativeStr += ' '
         elif pattern['t'] == 'Strong':
-            cumulativeStr += strongTemplate.substitute(strongtext=collapse(pattern['c'], hasStrong=True)) 
+            strong = collapse(pattern['c'], strongParts=strongParts, emphasizedParts=emphasizedParts) 
+            #print(strong)
+            cumulativeStr += strongTemplate.substitute(strongtext=str(strong)) 
+            strongParts.append(str(strong))
         elif pattern['t'] == 'Emph':
-            cumulativeStr += emphasizedTemplate.substitute(emtext=collapse(pattern['c'], hasEmphasis=True)) 
+            emphasis = collapse(pattern['c'], strongParts=strongParts, emphasizedParts=emphasizedParts)
+            cumulativeStr += emphasizedTemplate.substitute(emtext=str(emphasis)) 
+            emphasizedParts.append(str(emphasis))
 
     sentence = Sentence(cumulativeStr)
-    if hasEmphasis:
-        sentence = EmphasizedSentence(sentence,'')#to be implemented: strongPart
-    if hasStrong:
-        sentence = StrongSentence(sentence,'')#to be implemented: emphasizedPart
+    if len(strongParts) > 0:
+        sentence = EmphasizedSentence(sentence,strongParts)
+    if len(emphasizedParts) > 0:
+        sentence = StrongSentence(sentence,emphasizedParts)
 
     return sentence
 

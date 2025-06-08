@@ -1,7 +1,7 @@
 # header one
 
-Paragraph **is a paragraph**.
-I *should* be part of the previous paragraph.
+Paragraph$1$ **is a paragraph**.
+I *should* be part of `the` previous paragraph.
 
 another paragraph.
 
