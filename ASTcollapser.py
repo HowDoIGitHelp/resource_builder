@@ -1,5 +1,10 @@
 import json
 from string import Template
+from abc import ABC, abstractmethod
+from mistletoe import Document
+from mistletoe.markdown_renderer import MarkdownRenderer
+from mistletoe.block_token import Paragraph
+from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis
 
 class Sentence:
     '''
@@ -12,14 +17,23 @@ class Sentence:
     def importantParts(self) -> list:
         return [] 
 
+class Block(ABC):
+    def __init__(self):
+        pass
+    def __str__(self) -> str:
+        pass
+
 class StrongSentence(Sentence):
     def __init__(self,sentence:Sentence, strongParts:list):
         self.__sentence = sentence
         self.__strongParts = strongParts
     def __str__(self) -> str:
         return str(self.__sentence)
-    def importantParts(self) -> str:
-        return self.__sentence.importantParts() + self.__strongParts
+    def importantParts(self) -> list:
+        innerImportantParts = []
+        for part in self.__strongParts:
+            innerImportantParts += part.importantParts()
+        return self.__sentence.importantParts() + self.__strongParts + innerImportantParts
 
 class EmphasizedSentence(Sentence):
     def __init__(self,sentence:Sentence,emphasizedParts:list):
@@ -28,57 +42,52 @@ class EmphasizedSentence(Sentence):
     def __str__(self) -> str:
         return str(self.__sentence)
     def importantParts(self) -> list:
-        return self.__sentence.importantParts() + self.__emphasizedParts
+        innerImportantParts = []
+        for part in self.__emphasizedParts:
+            innerImportantParts += part.importantParts()
+        return self.__sentence.importantParts() + self.__emphasizedParts + innerImportantParts
 
-def splitParagraph(paragraph:dict) -> list:
+def Header(Block):
+    def __init__(self, content:list):
+        self.__mdContent:Sentence = collapse(content)
+    def __str__(self) -> str:
+        return str(self.__mdContent)
+
+def splitParagraph(paragraph:Paragraph) -> list:
     '''
-    Splits a paragraph into a lines based on SoftBreaks in the ast
+    Splits a paragraph into a lines based on SoftBreaks (single line breaks)
     '''
     lineList:list = []
     line:list = []
-    for d in paragraph['c']:
-        if d['t'] == 'SoftBreak':
+    for child in paragraph.children:
+        if isinstance(child,LineBreak):
             lineList.append(line)
             line = []
         else:
-            line.append(d)
+            line.append(child)
     lineList.append(line)
     
     return lineList
 
-def collapse(patternList:list, strongParts:list=[], emphasizedParts:list=[]) -> Sentence:
+def collapse(spanList:list) -> Sentence:
     '''
     Accepts a list of content patterns and returns Sentence
     '''
-    cumulativeStr:str = ''
-    strongTemplate:Template = Template('**$strongText**')
-    emphasizedTemplate:Template = Template('*$emText*')
-    mathTemplate:Template = Template('$$$inlineMath$$')
-    codeTemplate:Tempalte = Template('`$inlineCode`')
+    emphasizedParts = []
+    strongParts = []
+    mdSpanList = []
+    for token in spanList:
+        if isinstance(token, Emphasis):
+            emphasizedParts.append(collapse(token.children))
+        elif isinstance(token, Strong):
+            strongParts.append(collapse(token.children))
+        with MarkdownRenderer() as renderer:
+            mdSpanList.append(renderer.render(token)[:-1])
 
-    for pattern in patternList:
-        if pattern['t'] == 'Str':
-            cumulativeStr += pattern['c']
-        elif pattern['t'] == 'Space':
-            cumulativeStr += ' '
-        elif pattern['t'] == 'Strong':
-            strong = collapse(pattern['c'], strongParts=strongParts, emphasizedParts=emphasizedParts) 
-            cumulativeStr += strongTemplate.substitute(strongText=str(strong)) 
-            strongParts.append(str(strong))
-        elif pattern['t'] == 'Emph':
-            emphasis = collapse(pattern['c'], strongParts=strongParts, emphasizedParts=emphasizedParts)
-            cumulativeStr += emphasizedTemplate.substitute(emText=str(emphasis)) 
-            emphasizedParts.append(str(emphasis))
-        elif pattern['t'] == 'Math' and pattern['c'][0]['t'] == 'InlineMath':
-            cumulativeStr += mathTemplate.substitute(inlineMath=pattern['c'][1])
-        elif pattern['t'] == 'Code':
-            cumulativeStr += codeTemplate.substitute(inlineCode=pattern['c'][1])
-
-    sentence = Sentence(cumulativeStr)
-    if len(strongParts) > 0:
-        sentence = EmphasizedSentence(sentence,strongParts)
+    s = Sentence(''.join(mdSpanList))
     if len(emphasizedParts) > 0:
-        sentence = StrongSentence(sentence,emphasizedParts)
-
-    return sentence
+        s = EmphasizedSentence(s,emphasizedParts)
+    if len(strongParts) > 0:
+        s = StrongSentence(s,strongParts)
+    return s
 
