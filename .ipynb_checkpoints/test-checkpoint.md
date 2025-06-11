@@ -1,6 +1,6 @@
 # header one
 
-Paragraphs with ***strong* *emphasis***
+Paragraphs with ***strong* *emphasis***.
 Paragraph $1+3-3$ **is a paragraph**.
 I *should* be **part of** `the previous` paragraph.
 
@@ -13,6 +13,8 @@ another paragraph.
     - sub item 2
 - list item 2
 - list item 3
+    - sub item 3.1
+          - sub item 3.1.1
 
 # code 
 

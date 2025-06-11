@@ -5,7 +5,7 @@ from mistletoe import Document
 from mistletoe.markdown_renderer import MarkdownRenderer
 from mistletoe.block_token import Paragraph, Heading, List, BlockToken
 from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis
-
+import math
 class Sentence:
     '''
     base class that can be decorated by StrongSentence and EmphasizedSentence
@@ -61,43 +61,62 @@ class EmphasizedSentence(Sentence):
             innerImportantParts += part.importantParts()
         return self.__sentence.importantParts() + self.__emphasizedParts + innerImportantParts
 
-def ListBlock(CompositeBlock):
+class UnsupportedTokenException(Exception):
+    pass
+
+def asBlock(token:BlockToken) -> Block:
+    if isinstance(token, Paragraph):
+        return ParagraphBlock(token)
+    elif isinstance(token, List):
+        return ListBlock(token)
+    else:
+        raise UnsupportedTokenError()
+
+class ParagraphBlock(CompositeBlock):
+    def __init__(self, mdParagraph:Paragraph):
+        self.__mdParagraph = mdParagraph
+        self.__sentences = self.split()
+    def split(self) -> list:
+        '''
+        Splits a paragraph into lines based on SoftBreaks (single line breaks)
+        '''
+        lineList:list = []
+        line:list = []
+        for child in self.__mdParagraph.children:
+            if isinstance(child,LineBreak):
+                lineList.append(line)
+                line = []
+            else:
+                line.append(child)
+        lineList.append(line)
+        return lineList
+    def paragraphSize(self):
+        with MarkdownRenderer() as renderer:
+            return len(renderer.render(self.__mdParagraph))
+    def height(self, lineWidth=30):
+        return math.ceil(self.paragraphSize() / lineWidth)
+    def mdContent(self):
+        pass
+
+class ListBlock(CompositeBlock, TextBlock):
     def __init__(self, mdList:List):
         self.__mdList = mdList
+        self.__items = []
+        for item in self.__mdList.children:
+            for child in item.children:
+                self.__items.append(asBlock(child))
     def height(self, lineWidth=30):
         cumulativeHeight = 0
-        for item in self.children:
-            for child in item.children:
-                if isinstance(child, Paragraph):
-                    cumulativeHeight += paragraphHeight(child)
-                elif isinstance(child, List):
-                    cumulativeHeight += child.height
+        for item in self.__items:
+            cumulativeHeight += item.height()
         return cumulativeHeight
     def split(self, lines=4) -> list:
         pass
+    def mdContent(self) -> str:
+        pass
 
-def paragraphSize(paragraph:Paragraph):
-    with MarkdownRenderer() as renderer:
-        return renderer.render(len(paragraph))
 
-def paragraphHeight(paragraph:Paragraph, lineWidth=30):
-    return math.ceil(paragraphSize(paragraph) / lineWidth)
            
-def splitParagraph(paragraph:Paragraph) -> list:
-    '''
-    Splits a paragraph into a lines based on SoftBreaks (single line breaks)
-    '''
-    lineList:list = []
-    line:list = []
-    for child in paragraph.children:
-        if isinstance(child,LineBreak):
-            lineList.append(line)
-            line = []
-        else:
-            line.append(child)
-    lineList.append(line)
-    
-    return lineList
 
 def collapse(spanList:list) -> Sentence:
     '''
