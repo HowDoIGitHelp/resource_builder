@@ -9,6 +9,8 @@ another paragraph.
 ## an inner header
 
 - list **item 1**
+    - sub item 1
+    - sub item 2
 - list item 2
 - list item 3
 

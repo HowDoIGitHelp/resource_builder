@@ -3,7 +3,7 @@ from string import Template
 from abc import ABC, abstractmethod
 from mistletoe import Document
 from mistletoe.markdown_renderer import MarkdownRenderer
-from mistletoe.block_token import Paragraph
+from mistletoe.block_token import Paragraph, Heading, List, BlockToken
 from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis
 
 class Sentence:
@@ -18,11 +18,25 @@ class Sentence:
         return [] 
 
 class Block(ABC):
-    def __init__(self):
-        pass
-    def __str__(self) -> str:
+    @abstractmethod
+    def mdContent(self) -> str:
         pass
 
+class CompositeBlock(Block):
+    @abstractmethod
+    def split(self, lines=4) -> list:
+        pass
+
+class TextBlock(Block):
+    @abstractmethod
+    def height(self, lineWidth=30):
+        pass
+
+class SlideContent(ABC):
+    @abstractmethod
+    def mdContent(self):
+        pass
+    
 class StrongSentence(Sentence):
     def __init__(self,sentence:Sentence, strongParts:list):
         self.__sentence = sentence
@@ -47,12 +61,28 @@ class EmphasizedSentence(Sentence):
             innerImportantParts += part.importantParts()
         return self.__sentence.importantParts() + self.__emphasizedParts + innerImportantParts
 
-def Header(Block):
-    def __init__(self, content:list):
-        self.__mdContent:Sentence = collapse(content)
-    def __str__(self) -> str:
-        return str(self.__mdContent)
+def ListBlock(CompositeBlock):
+    def __init__(self, mdList:List):
+        self.__mdList = mdList
+    def height(self, lineWidth=30):
+        cumulativeHeight = 0
+        for item in self.children:
+            for child in item.children:
+                if isinstance(child, Paragraph):
+                    cumulativeHeight += paragraphHeight(child)
+                elif isinstance(child, List):
+                    cumulativeHeight += child.height
+        return cumulativeHeight
+    def split(self, lines=4) -> list:
+        pass
 
+def paragraphSize(paragraph:Paragraph):
+    with MarkdownRenderer() as renderer:
+        return renderer.render(len(paragraph))
+
+def paragraphHeight(paragraph:Paragraph, lineWidth=30):
+    return math.ceil(paragraphSize(paragraph) / lineWidth)
+           
 def splitParagraph(paragraph:Paragraph) -> list:
     '''
     Splits a paragraph into a lines based on SoftBreaks (single line breaks)
