@@ -3,7 +3,7 @@ from string import Template
 from abc import ABC, abstractmethod
 from mistletoe import Document
 from mistletoe.markdown_renderer import MarkdownRenderer
-from mistletoe.block_token import Paragraph, Heading, List, BlockToken
+from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken
 from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis
 import math
 class Sentence:
@@ -21,15 +21,13 @@ class Block(ABC):
     @abstractmethod
     def mdContent(self) -> str:
         pass
+    @abstractmethod
+    def height(self) -> int:
+        pass
 
 class CompositeBlock(Block):
     @abstractmethod
     def split(self, lines=4) -> list:
-        pass
-
-class TextBlock(Block):
-    @abstractmethod
-    def height(self, lineWidth=30):
         pass
 
 class SlideContent(ABC):
@@ -69,6 +67,8 @@ def asBlock(token:BlockToken) -> Block:
         return ParagraphBlock(token)
     elif isinstance(token, List):
         return ListBlock(token)
+    elif isinstance(token, ListItem):
+        return ItemBlock(token)
     else:
         raise UnsupportedTokenError()
 
@@ -97,19 +97,37 @@ class ParagraphBlock(CompositeBlock):
         return math.ceil(self.paragraphSize() / lineWidth)
     def mdContent(self):
         pass
-
-class ListBlock(CompositeBlock, TextBlock):
+class ItemBlock(CompositeBlock):
+    def __init__(self, mdContent:Block):
+        self.__leader = mdContent.leader
+        self.__content = mdContent
+        self.__children = []
+        for child in self.__content.children:
+            self.__children.append(asBlock(child))
+    def height(self):
+        cumulativeHeight = 0
+        for child in self.__children:
+            cumulativeHeight += child.height()
+        return cumulativeHeight
+    def content(self):
+        return self.__content
+    def mdContent(self) -> str:
+        pass
+    def split(self, lines=4):
+        pass
+class ListBlock(CompositeBlock):
     def __init__(self, mdList:List):
         self.__mdList = mdList
         self.__items = []
         for item in self.__mdList.children:
-            for child in item.children:
-                self.__items.append(asBlock(child))
+            self.__items.append(asBlock(item))
     def height(self, lineWidth=30):
         cumulativeHeight = 0
         for item in self.__items:
             cumulativeHeight += item.height()
         return cumulativeHeight
+    def nthItem(self, n:int) -> Block:
+        return self.__items[n]
     def split(self, lines=4) -> list:
         pass
     def mdContent(self) -> str:
