@@ -26,6 +26,9 @@ class Block(ABC):
         pass
 
 class CompositeBlock(Block):
+    '''
+    composite blocks can be split into multiple slides, split is based on number of lines
+    '''
     @abstractmethod
     def split(self, lines=4) -> list:
         pass
@@ -63,6 +66,9 @@ class UnsupportedTokenException(Exception):
     pass
 
 def asBlock(token:BlockToken) -> Block:
+    '''
+    convert mistletoe.block_token.BlockToken into Blocks
+    '''
     if isinstance(token, Paragraph):
         return ParagraphBlock(token)
     elif isinstance(token, List):
@@ -75,10 +81,10 @@ def asBlock(token:BlockToken) -> Block:
 class ParagraphBlock(CompositeBlock):
     def __init__(self, mdParagraph:Paragraph):
         self.__mdParagraph = mdParagraph
-        self.__sentences = self.split()
-    def split(self) -> list:
+        self.__sentences = [collapse(spanList) for spanList in self.decompose()]
+    def decompose(self) -> list:
         '''
-        Splits a paragraph into lines based on SoftBreaks (single line breaks)
+        Decompose a paragraph into list of span tokens based on SoftBreaks (single line breaks)
         '''
         lineList:list = []
         line:list = []
@@ -96,6 +102,8 @@ class ParagraphBlock(CompositeBlock):
     def height(self, lineWidth=30):
         return math.ceil(self.paragraphSize() / lineWidth)
     def mdContent(self):
+        pass
+    def split(self):
         pass
 class ItemBlock(CompositeBlock):
     def __init__(self, mdContent:Block):
@@ -138,7 +146,7 @@ class ListBlock(CompositeBlock):
 
 def collapse(spanList:list) -> Sentence:
     '''
-    Accepts a list of content patterns and returns Sentence
+    Collapses a list of span tokens and returns Sentence
     '''
     emphasizedParts = []
     strongParts = []
