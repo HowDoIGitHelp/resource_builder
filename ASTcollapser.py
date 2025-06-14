@@ -3,9 +3,11 @@ from string import Template
 from abc import ABC, abstractmethod
 from mistletoe import Document
 from mistletoe.markdown_renderer import MarkdownRenderer
-from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken
+from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken, CodeFence
 from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis
 import math
+import re
+
 class Sentence:
     '''
     base class that can be decorated by StrongSentence and EmphasizedSentence
@@ -65,18 +67,30 @@ class EmphasizedSentence(Sentence):
 class UnsupportedTokenException(Exception):
     pass
 
+def isMathBlock(paragraph:Paragraph, mathFence = '$$') -> bool:
+    '''
+    mathblocks are not native to commonmark or mistletoe, this function checks if a paragraph is surrounded by the math fence
+    '''
+    startsWithDollars = isinstance(paragraph.children[0], RawText) and paragraph.children[0].content.startswith(mathFence)
+    endsWithDollars = isinstance(paragraph.children[-1], RawText) and paragraph.children[-1].content.endswith(mathFence)
+    return startsWithDollars and endsWithDollars
+
 def asBlock(token:BlockToken) -> Block:
     '''
     convert mistletoe.block_token.BlockToken into Blocks
     '''
-    if isinstance(token, Paragraph):
+    if isinstance(token, Paragraph) and isMathBlock(token):
+        return MathBlock(token)
+    elif isinstance(token, Paragraph):
         return ParagraphBlock(token)
     elif isinstance(token, List):
         return ListBlock(token)
     elif isinstance(token, ListItem):
         return ItemBlock(token)
+    elif isinstance(token, CodeFence):
+        return CodeBlock(token)
     else:
-        raise UnsupportedTokenError()
+        raise UnsupportedTokenException()
 
 class ParagraphBlock(CompositeBlock):
     def __init__(self, mdParagraph:Paragraph):
@@ -105,6 +119,7 @@ class ParagraphBlock(CompositeBlock):
         pass
     def split(self):
         pass
+
 class ItemBlock(CompositeBlock):
     def __init__(self, mdContent:Block):
         self.__leader = mdContent.leader
@@ -123,6 +138,7 @@ class ItemBlock(CompositeBlock):
         pass
     def split(self, lines=4):
         pass
+
 class ListBlock(CompositeBlock):
     def __init__(self, mdList:List):
         self.__mdList = mdList
@@ -141,8 +157,65 @@ class ListBlock(CompositeBlock):
     def mdContent(self) -> str:
         pass
 
+class CodeBlock(CompositeBlock):
+    def __init__(self, mdCodeFence:CodeFence):
+        self.__language = mdCodeFence.language
+        self.__lines = mdCodeFence.children[0].content.split('\n')
+    def height(self, lineWidth=30) -> int:
+        cumulativeHeight = 0
+        for line in self.__lines:
+            cumulativeHeight += math.ceil(len(line) / lineWidth)
+        return cumulativeHeight
+    def split(self, lines=3):
+        pass
+    def mdContent(self) -> list:
+        pass
 
-           
+def extractedMathEnvironments(mathBlock, environment) -> dict:#does not support nested environments e.g. matrix inside a matrix
+    pattern = Template(r'\\begin{$env}.*?\\end{$env}')
+    multilinePattern = re.compile(pattern.substitute(env=environment))
+    multilineBlocks = multilinePattern.findall(mathBlock)
+    replacedMathBlock = re.sub(multilinePattern, f'$${environment}$$', mathBlock)
+    return {'extractedBlocks':multilineBlocks, 'replacedMathBlock':replacedMathBlock}
+
+class MathLine:
+    def __init__(self, mathTeX:str):
+        self.__mathTeX = mathTeX
+    def height(self, lineWidth=30):
+        return self.__mathTeX.count('\\\\') + 1
+
+class MathBlock(CompositeBlock):
+    def __init__(self, mdParagraph:Paragraph):
+        self.__aligned = False
+        rawLines = [line for line in mdParagraph.children]
+        jointLines = (''.join([line.content for line in rawLines]))[2:-2]
+        if jointLines.startswith('\\begin{aligned}') and jointLines.endswith('\\end{aligned}'):
+            self.__aligned = True
+            jointLines = jointLines[15:-13]
+        multilineEnvironments = ['bmatrix','matrix']
+        extractedBlocks = {}
+        #remove all multiline blocks while saving removed blocks to extracted blocks
+        for env in multilineEnvironments:
+            exME = extractedMathEnvironments(jointLines, env)
+            jointLines = exME['replacedMathBlock']
+            extractedBlocks[env] = exME['extractedBlocks']
+        #now that all multiline blocks are gone, replace newline separators with $$nl$$ token
+        jointLines = jointLines.replace('\\\\', '$$nl$$')
+        #place all extracted blocks back
+        for env in multilineEnvironments:
+            for block in extractedBlocks[env]:
+                jointLines = jointLines.replace(f'$${env}$$', block, 1)
+        #safely split the math block using the $$nl$$ token
+        self.__lines = [MathLine(line) for line in jointLines.split('$$nl$$')]
+    def height(self, lineWidth=30):
+        cumulativeHeight = 0
+        for line in self.__lines:
+            cumulativeHeight += line.height()
+        return cumulativeHeight
+    def split(self, lines=3):
+        pass
+    def mdContent(self):
+        pass
 
 def collapse(spanList:list) -> Sentence:
     '''

@@ -6,22 +6,31 @@ I *should* be **part of** `the previous` paragraph.
 
 another paragraph.
 
-## an inner header
+## math
 
-- list **item 1**
-    - sub item 1
-    - sub item 2
-- list item 2
-- list item 3
-    - sub item 3.1
-          - sub item 3.1.1
+$$
+\begin{aligned}
+\begin{bmatrix}
+3& 1\\
+0&2
+\end{bmatrix}
+\vec{e} &=
+2\vec{e}\\
+\begin{bmatrix}
+3& 1\\
+0&2
+\end{bmatrix}
+\vec{e} &=
+3\vec{e}
+\end{aligned}
+$$
 
 # code 
 
-1. test
-2. this
-    1. test
-    2. a
-       1. test
-           1. innermost
-       3. test
+```python
+for i in range(10):
+    print(i)
+    print(i+1)
+
+print('done')
+```
