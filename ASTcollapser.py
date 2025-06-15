@@ -3,7 +3,7 @@ from string import Template
 from abc import ABC, abstractmethod
 from mistletoe import Document
 from mistletoe.markdown_renderer import MarkdownRenderer
-from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken, CodeFence
+from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken, CodeFence, Quote
 from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis
 import math
 import re
@@ -89,6 +89,8 @@ def asBlock(token:BlockToken) -> Block:
         return ItemBlock(token)
     elif isinstance(token, CodeFence):
         return CodeBlock(token)
+    elif isinstance(token, Quote):
+        return QuoteBlock(token)
     else:
         raise UnsupportedTokenException()
 
@@ -165,6 +167,22 @@ class CodeBlock(CompositeBlock):
         cumulativeHeight = 0
         for line in self.__lines:
             cumulativeHeight += math.ceil(len(line) / lineWidth)
+        return cumulativeHeight
+    def split(self, lines=3):
+        pass
+    def mdContent(self) -> list:
+        pass
+
+class QuoteBlock(CompositeBlock):
+    def __init__(self, mdContent):
+        self.__mdQuote = mdContent
+        self.__children = []
+        for child in self.__mdQuote.children:
+            self.__children.append(asBlock(child))
+    def height(self, lineWidth=30):
+        cumulativeHeight = 0
+        for child in self.__children:
+            cumulativeHeight += child.height()
         return cumulativeHeight
     def split(self, lines=3):
         pass

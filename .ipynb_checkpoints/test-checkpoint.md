@@ -16,10 +16,10 @@ $$
 \end{bmatrix}
 \vec{e} &=
 2\vec{e}\\
-\begin{bmatrix}
+\begin{matrix}
 3& 1\\
 0&2
-\end{bmatrix}
+\end{matrix}
 \vec{e} &=
 3\vec{e}
 \end{aligned}
@@ -27,10 +27,7 @@ $$
 
 # code 
 
-```python
-for i in range(10):
-    print(i)
-    print(i+1)
-
-print('done')
-```
+> Paragraph quoted.
+> same paragraph quoted.
+> > Double quoted.
+> > Double quoted sentence 2.
