@@ -19,6 +19,8 @@ class Sentence:
         return str(self.__sentence)
     def importantParts(self) -> list:
         return [] 
+    def size(self) -> int:
+        return len(self.__sentence)
 
 class Block(ABC):
     @abstractmethod
@@ -52,6 +54,8 @@ class StrongSentence(Sentence):
         for part in self.__strongParts:
             innerImportantParts += part.importantParts()
         return self.__sentence.importantParts() + self.__strongParts + innerImportantParts
+    def size(self) -> int:
+        return self.__sentence.size()
 
 class EmphasizedSentence(Sentence):
     def __init__(self,sentence:Sentence,emphasizedParts:list):
@@ -64,6 +68,9 @@ class EmphasizedSentence(Sentence):
         for part in self.__emphasizedParts:
             innerImportantParts += part.importantParts()
         return self.__sentence.importantParts() + self.__emphasizedParts + innerImportantParts
+    def size(self) -> int:
+        return self.__sentence.size()
+
 
 class UnsupportedTokenException(Exception):
     def __init__(self, token:BlockToken):
@@ -136,8 +143,10 @@ class ParagraphBlock(CompositeBlock):
         lineList.append(line)
         return lineList
     def paragraphSize(self):
-        with MarkdownRenderer() as renderer:
-            return len(renderer.render(self.__mdParagraph))#replace with a calculation based on its composites, self.__sentences
+        cumulativeSize = 0
+        for sentence in self.__sentences:
+            cumulativeSize += sentence.size()
+        return cumulativeSize
     def height(self, lineWidth=30):
         return math.ceil(self.paragraphSize() / lineWidth)
     def mdContent(self):
