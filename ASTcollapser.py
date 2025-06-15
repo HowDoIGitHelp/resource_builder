@@ -2,9 +2,10 @@ import json
 from string import Template
 from abc import ABC, abstractmethod
 from mistletoe import Document
-from mistletoe.markdown_renderer import MarkdownRenderer
+from mistletoe.markdown_renderer import MarkdownRenderer, LinkReferenceDefinition, BlankLine
 from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken, CodeFence, Quote
-from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis
+from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis, Image
+from mistletoe.token import Token
 import math
 import re
 
@@ -65,7 +66,8 @@ class EmphasizedSentence(Sentence):
         return self.__sentence.importantParts() + self.__emphasizedParts + innerImportantParts
 
 class UnsupportedTokenException(Exception):
-    pass
+    def __init__(self, token:BlockToken):
+        self.unsupportedToken = token
 
 def isMathBlock(paragraph:Paragraph, mathFence = '$$') -> bool:
     '''
@@ -75,14 +77,26 @@ def isMathBlock(paragraph:Paragraph, mathFence = '$$') -> bool:
     endsWithDollars = isinstance(paragraph.children[-1], RawText) and paragraph.children[-1].content.endswith(mathFence)
     return startsWithDollars and endsWithDollars
 
+def isInvisible(token:Token):
+    if isinstance(token, BlankLine):
+        return True
+    if isinstance(token, LinkReferenceDefinition):
+        return True
+    else:
+        return False
+
 def asBlock(token:BlockToken) -> Block:
     '''
     convert mistletoe.block_token.BlockToken into Blocks
     '''
     if isinstance(token, Paragraph) and isMathBlock(token):
         return MathBlock(token)
+    elif isinstance(token, Paragraph) and isImageBlock(token):
+        return ImageBlock(token)
     elif isinstance(token, Paragraph):
         return ParagraphBlock(token)
+    elif isinstance(token, Heading):
+        return HeadingBlock(token)
     elif isinstance(token, List):
         return ListBlock(token)
     elif isinstance(token, ListItem):
@@ -92,7 +106,16 @@ def asBlock(token:BlockToken) -> Block:
     elif isinstance(token, Quote):
         return QuoteBlock(token)
     else:
-        raise UnsupportedTokenException()
+        raise UnsupportedTokenException(token)
+
+class HeadingBlock(Block):
+    def __init__(self, mdHeading:Heading):
+        self.__level = mdHeading.level
+        self.__content = collapse(mdHeading.children)
+    def mdContent(self):
+        pass
+    def height(self, lineWidth=30):
+        return 0 
 
 class ParagraphBlock(CompositeBlock):
     def __init__(self, mdParagraph:Paragraph):
@@ -114,7 +137,7 @@ class ParagraphBlock(CompositeBlock):
         return lineList
     def paragraphSize(self):
         with MarkdownRenderer() as renderer:
-            return len(renderer.render(self.__mdParagraph))
+            return len(renderer.render(self.__mdParagraph))#replace with a calculation based on its composites, self.__sentences
     def height(self, lineWidth=30):
         return math.ceil(self.paragraphSize() / lineWidth)
     def mdContent(self):
@@ -232,6 +255,20 @@ class MathBlock(CompositeBlock):
         return cumulativeHeight
     def split(self, lines=3):
         pass
+    def mdContent(self):
+        pass
+
+def isImageBlock(paragraph:Paragraph):
+    return len(paragraph.children) == 1 and isinstance(paragraph.children[0], Image)
+
+class ImageBlock(Block):
+    def __init__(self, paragraph:Paragraph):
+        self.__mdImage = paragraph.children[0]
+        self.__altText:Sentence = collapse(self.__mdImage.children)
+        self.__title = self.__mdImage.title
+        self.__src = self.__mdImage.src
+    def height(self, lineWidth=30):
+        return 1
     def mdContent(self):
         pass
 

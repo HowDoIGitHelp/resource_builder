@@ -6,24 +6,11 @@ I *should* be **part of** `the previous` paragraph.
 
 another paragraph.
 
-## math
+## image
 
-$$
-\begin{aligned}
-\begin{bmatrix}
-3& 1\\
-0&2
-\end{bmatrix}
-\vec{e} &=
-2\vec{e}\\
-\begin{matrix}
-3& 1\\
-0&2
-\end{matrix}
-\vec{e} &=
-3\vec{e}
-\end{aligned}
-$$
+![**alt** text]
+
+[**alt** text]:url.png "title"
 
 # code 
 
