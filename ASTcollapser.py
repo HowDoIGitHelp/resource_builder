@@ -9,7 +9,12 @@ from mistletoe.token import Token
 import math
 import re
 
-class Sentence:
+class Component(ABC):
+    @abstractmethod
+    def height(self, lineWidth=30):
+        pass
+
+class Sentence(Component):
     '''
     base class that can be decorated by StrongSentence and EmphasizedSentence
     '''
@@ -209,7 +214,7 @@ class ListBlock(CompositeBlock):
     def mdContent(self) -> str:
         pass
 
-class CodeLine:
+class CodeLine(Component):
     def __init__(self, content):
         self.__content = content
     def height(self, lineWidth=30):
@@ -232,11 +237,6 @@ class QuoteBlock(CompositeBlock):
         self.__children = []
         for child in self.__mdQuote.children:
             self.__children.append(asBlock(child))
-    def height(self, lineWidth=30):
-        cumulativeHeight = 0
-        for child in self.__children:
-            cumulativeHeight += child.height()
-        return cumulativeHeight
     def children(self):
         return self.__children
     def split(self, lines=3):
@@ -251,7 +251,7 @@ def extractedMathEnvironments(mathBlock, environment) -> dict:#does not support 
     replacedMathBlock = re.sub(multilinePattern, f'$${environment}$$', mathBlock)
     return {'extractedBlocks':multilineBlocks, 'replacedMathBlock':replacedMathBlock}
 
-class MathLine:
+class MathLine(Component):
     def __init__(self, mathTeX:str):
         self.__mathTeX = mathTeX
     def height(self, lineWidth=30):
