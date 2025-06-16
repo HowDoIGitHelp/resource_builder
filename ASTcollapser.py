@@ -21,6 +21,8 @@ class Sentence:
         return [] 
     def size(self) -> int:
         return len(self.__sentence)
+    def height(self, lineWidth=30):
+        return math.ceil(self.size() / lineWidth)
 
 class Block(ABC):
     @abstractmethod
@@ -34,9 +36,28 @@ class CompositeBlock(Block):
     '''
     composite blocks can be split into multiple slides, split is based on number of lines
     '''
-    @abstractmethod
     def split(self, lines=4) -> list:
+        slides = []
+        currentHeight = 0
+        currentSlide = []
+        for child in self.children():
+            if currentHeight + child.height() > lines:
+                slides.append(currentSlide)
+                currentSlide = [child]
+                currentHeight = child.height()
+            else:
+                currentSlide.append(child)
+                currentHeight += child.height()
+        slides.append(currentSlide)
+        return slides
+    @abstractmethod
+    def children(self) -> list:
         pass
+    def height(self, lineWidth=30):
+        cumulativeHeight = 0
+        for child in self.children():
+            cumulativeHeight += child.height()
+        return cumulativeHeight
 
 class SlideContent(ABC):
     @abstractmethod
@@ -142,17 +163,10 @@ class ParagraphBlock(CompositeBlock):
                 line.append(child)
         lineList.append(line)
         return lineList
-    def paragraphSize(self):
-        cumulativeSize = 0
-        for sentence in self.__sentences:
-            cumulativeSize += sentence.size()
-        return cumulativeSize
-    def height(self, lineWidth=30):
-        return math.ceil(self.paragraphSize() / lineWidth)
     def mdContent(self):
         pass
-    def split(self):
-        pass
+    def children(self):
+        return self.__sentences
 
 class ItemBlock(CompositeBlock):
     def __init__(self, mdContent:Block):
@@ -168,6 +182,8 @@ class ItemBlock(CompositeBlock):
         return cumulativeHeight
     def content(self):
         return self.__content
+    def children(self):
+        return self.__children
     def mdContent(self) -> str:
         pass
     def split(self, lines=4):
@@ -186,22 +202,27 @@ class ListBlock(CompositeBlock):
         return cumulativeHeight
     def nthItem(self, n:int) -> Block:
         return self.__items[n]
+    def children(self):
+        return self.__items
     def split(self, lines=4) -> list:
         pass
     def mdContent(self) -> str:
         pass
 
+class CodeLine:
+    def __init__(self, content):
+        self.__content = content
+    def height(self, lineWidth=30):
+        return math.ceil(len(self.__content) / lineWidth)
+
 class CodeBlock(CompositeBlock):
     def __init__(self, mdCodeFence:CodeFence):
         self.__language = mdCodeFence.language
-        self.__lines = mdCodeFence.children[0].content.split('\n')
-    def height(self, lineWidth=30) -> int:
-        cumulativeHeight = 0
-        for line in self.__lines:
-            cumulativeHeight += math.ceil(len(line) / lineWidth)
-        return cumulativeHeight
-    def split(self, lines=3):
-        pass
+        self.__lines = []
+        for lineContent in mdCodeFence.children[0].content.split('\n'):
+            self.__lines.append(CodeLine(lineContent))
+    def children(self):
+        return self.__lines
     def mdContent(self) -> list:
         pass
 
@@ -216,6 +237,8 @@ class QuoteBlock(CompositeBlock):
         for child in self.__children:
             cumulativeHeight += child.height()
         return cumulativeHeight
+    def children(self):
+        return self.__children
     def split(self, lines=3):
         pass
     def mdContent(self) -> list:
@@ -257,11 +280,8 @@ class MathBlock(CompositeBlock):
                 jointLines = jointLines.replace(f'$${env}$$', block, 1)
         #safely split the math block using the $$nl$$ token
         self.__lines = [MathLine(line) for line in jointLines.split('$$nl$$')]
-    def height(self, lineWidth=30):
-        cumulativeHeight = 0
-        for line in self.__lines:
-            cumulativeHeight += line.height()
-        return cumulativeHeight
+    def children(self):
+        return self.__lines
     def split(self, lines=3):
         pass
     def mdContent(self):
