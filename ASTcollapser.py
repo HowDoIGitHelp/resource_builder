@@ -10,6 +10,9 @@ import math
 import re
 
 class Component(ABC):
+    '''
+    CompositeBlocks are made up of Components
+    '''
     @abstractmethod
     def height(self, lineWidth=30):
         pass
@@ -31,29 +34,35 @@ class Sentence(Component):
 
 class Block(ABC):
     @abstractmethod
-    def mdContent(self) -> str:
-        pass
-    @abstractmethod
     def height(self) -> int:
         pass
+
+class HeadingBlock(Block):
+    def __init__(self, mdHeading:Heading):
+        self.__level = mdHeading.level
+        self.__content = collapse(mdHeading.children)
+    def height(self, lineWidth=30):
+        return 0 
+    def headText(self) -> str:
+        return str(self.__content)
 
 class CompositeBlock(Block):
     '''
     composite blocks can be split into multiple slides, split is based on number of lines
     '''
-    def split(self, lines=4) -> list:
+    def slides(self, head:HeadingBlock, lines=4) -> list:
         slides = []
         currentHeight = 0
         currentSlide = []
         for child in self.children():
             if currentHeight + child.height() > lines:
-                slides.append(currentSlide)
+                slides.append(self.mdSlide(currentSlide, head))
                 currentSlide = [child]
                 currentHeight = child.height()
             else:
                 currentSlide.append(child)
                 currentHeight += child.height()
-        slides.append(currentSlide)
+        slides.append(self.mdSlide(currentSlide, head))
         return slides
     @abstractmethod
     def children(self) -> list:
@@ -63,12 +72,10 @@ class CompositeBlock(Block):
         for child in self.children():
             cumulativeHeight += child.height()
         return cumulativeHeight
-
-class SlideContent(ABC):
-    @abstractmethod
-    def mdContent(self):
+    #@abstractmethod
+    def mdSlide(self, components:list, head:HeadingBlock) -> str:
         pass
-    
+
 class StrongSentence(Sentence):
     def __init__(self,sentence:Sentence, strongParts:list):
         self.__sentence = sentence
@@ -141,15 +148,6 @@ def asBlock(token:BlockToken) -> Block:
     else:
         raise UnsupportedTokenException(token)
 
-class HeadingBlock(Block):
-    def __init__(self, mdHeading:Heading):
-        self.__level = mdHeading.level
-        self.__content = collapse(mdHeading.children)
-    def mdContent(self):
-        pass
-    def height(self, lineWidth=30):
-        return 0 
-
 class ParagraphBlock(CompositeBlock):
     def __init__(self, mdParagraph:Paragraph):
         self.__mdParagraph = mdParagraph
@@ -168,10 +166,15 @@ class ParagraphBlock(CompositeBlock):
                 line.append(child)
         lineList.append(line)
         return lineList
-    def mdContent(self):
-        pass
     def children(self):
         return self.__sentences
+    def mdSlide(self, components:list, head:HeadingBlock) -> str:
+        md = ''
+        md += f'# {head.headText()}\n'
+        md += '\n'
+        for sentence in components:
+            md += f'- {sentence}\n'
+        return md
 
 class ItemBlock(CompositeBlock):
     def __init__(self, mdContent:Block):
@@ -191,8 +194,6 @@ class ItemBlock(CompositeBlock):
         return self.__children
     def mdContent(self) -> str:
         pass
-    def split(self, lines=4):
-        pass
 
 class ListBlock(CompositeBlock):
     def __init__(self, mdList:List):
@@ -209,8 +210,6 @@ class ListBlock(CompositeBlock):
         return self.__items[n]
     def children(self):
         return self.__items
-    def split(self, lines=4) -> list:
-        pass
     def mdContent(self) -> str:
         pass
 
@@ -219,6 +218,8 @@ class CodeLine(Component):
         self.__content = content
     def height(self, lineWidth=30):
         return math.ceil(len(self.__content) / lineWidth)
+    def __str__(self) -> str:
+        return self.__content
 
 class CodeBlock(CompositeBlock):
     def __init__(self, mdCodeFence:CodeFence):
@@ -228,8 +229,15 @@ class CodeBlock(CompositeBlock):
             self.__lines.append(CodeLine(lineContent))
     def children(self):
         return self.__lines
-    def mdContent(self) -> list:
-        pass
+    def mdSlide(self, components:list, head:HeadingBlock) -> str:
+        md = ''
+        md += f'# {head.headText()}\n'
+        md += '\n'
+        md += f'```{self.__language}\n'
+        for line in components:
+            md += f'{line}\n'
+        md += '```'
+        return md
 
 class QuoteBlock(CompositeBlock):
     def __init__(self, mdContent):
@@ -239,8 +247,6 @@ class QuoteBlock(CompositeBlock):
             self.__children.append(asBlock(child))
     def children(self):
         return self.__children
-    def split(self, lines=3):
-        pass
     def mdContent(self) -> list:
         pass
 
@@ -282,8 +288,6 @@ class MathBlock(CompositeBlock):
         self.__lines = [MathLine(line) for line in jointLines.split('$$nl$$')]
     def children(self):
         return self.__lines
-    def split(self, lines=3):
-        pass
     def mdContent(self):
         pass
 
