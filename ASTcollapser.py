@@ -36,6 +36,8 @@ class Block(ABC):
     @abstractmethod
     def height(self) -> int:
         pass
+    def items(self, level=0, indentSize=0, leader=''):
+        return [IndentedListItem(self, level=level, indentSize=indentSize, leader=leader)]
 
 class HeadingBlock(Block):
     def __init__(self, mdHeading:Heading):
@@ -175,11 +177,30 @@ class ParagraphBlock(CompositeBlock):
         for sentence in components:
             md += f'- {sentence}\n'
         return md
+    def __str__(self) -> str:
+        cumulativeString = ''
+        for sentence in self.__sentences:
+            cumulativeString += f'{sentence} '
+        return cumulativeString[:-1]
+
+class IndentedListItem(Component):
+    def __init__(self, content:Block, indentSize=0, level=0, leader=''):
+        self.__level = level
+        self.__content = content
+        self.__leader = leader
+        self.__indentSize = indentSize
+        self.__prefix = ' ' * ((indentSize * level) - len(leader))
+        self.__prefix += leader
+    def __str__(self) -> str:
+        return f'{self.__prefix}{self.__content}'
+    def height(self, lineWidth=30) -> int:
+        return math.ceil(len(str(self)) / lineWidth)
 
 class ItemBlock(CompositeBlock):
     def __init__(self, mdContent:Block):
         self.__leader = mdContent.leader
         self.__content = mdContent
+        self.__indentSize = len(self.__leader) + 1
         self.__children = []
         for child in self.__content.children:
             self.__children.append(asBlock(child))
@@ -190,10 +211,20 @@ class ItemBlock(CompositeBlock):
         return cumulativeHeight
     def content(self):
         return self.__content
-    def children(self):
-        return self.__children
-    def mdContent(self) -> str:
-        pass
+    def items(self, level=0, indentSize=0, leader=''):
+        itemsDFS = []
+        if len(self.__children) > 0:
+            itemsDFS += self.__children[0].items(
+                    level=level+1, 
+                    indentSize=self.__indentSize, 
+                    leader=f'{self.__leader} '
+            )
+            for child in self.__children[1:]:
+                #itemsDFS.append(child)
+                itemsDFS += child.items(level=level+1, indentSize=self.__indentSize, leader='')
+        return itemsDFS
+    def children(self) -> list:
+        return self.items()
 
 class ListBlock(CompositeBlock):
     def __init__(self, mdList:List):
@@ -208,10 +239,25 @@ class ListBlock(CompositeBlock):
         return cumulativeHeight
     def nthItem(self, n:int) -> Block:
         return self.__items[n]
-    def children(self):
-        return self.__items
-    def mdContent(self) -> str:
-        pass
+    def items(self, level=0, indentSize=0, leader='') -> list:
+        itemsDFS = []
+        for item in self.__items:
+            itemsDFS += item.items(level=level, indentSize=indentSize, leader=leader)
+        return itemsDFS
+    def children(self) -> list:
+        return self.items()
+    def __str__(self) -> str:
+        cumulativeString = ''
+        for items in self.items():
+            cumulativeString += f'{items}\n'
+        return cumulativeString[:-1]
+    def mdSlide(self, components:list, head:HeadingBlock) -> str:
+        md = ''
+        md += f'# {head.headText()}\n'
+        md += '\n'
+        for line in components:
+            md += f'{line}\n'
+        return md
 
 class CodeLine(Component):
     def __init__(self, content):
@@ -247,8 +293,23 @@ class QuoteBlock(CompositeBlock):
             self.__children.append(asBlock(child))
     def children(self):
         return self.__children
-    def mdContent(self) -> list:
-        pass
+    def mdSlide(self, components:list, head:HeadingBlock) -> str:
+        md = ''
+        md += f'# {head.headText()}\n'
+        md += '\n'
+        for line in components:
+            md += f'> {line}\n'
+        return md
+    def __str__(self) -> str:
+        cumulativeString = ''
+        for child in self.__children:
+            cumulativeString += f'> {child} '
+        return cumulativeString[:-1]
+    def height(self, lineWidth=30) -> int:
+        cumulativeHeight = 0
+        for child in self.__children:
+            cumulativeHeight += math.ceil(len(str(child)) / lineWidth)
+        return cumulativeHeight
 
 def extractedMathEnvironments(mathBlock, environment) -> dict:#does not support nested environments e.g. matrix inside a matrix
     pattern = Template(r'\\begin{$env}.*?\\end{$env}')
