@@ -262,6 +262,8 @@ class MathLine(Component):
         self.__mathTeX = mathTeX
     def height(self, lineWidth=30):
         return self.__mathTeX.count('\\\\') + 1
+    def __str__(self) -> str:
+        return self.__mathTeX
 
 class MathBlock(CompositeBlock):
     def __init__(self, mdParagraph:Paragraph):
@@ -288,8 +290,21 @@ class MathBlock(CompositeBlock):
         self.__lines = [MathLine(line) for line in jointLines.split('$$nl$$')]
     def children(self):
         return self.__lines
-    def mdContent(self):
-        pass
+    def mdSlide(self, components:list, head:HeadingBlock) -> str:
+        md = ''
+        md += f'# {head.headText()}\n'
+        md += '\n'
+        md += f'$$\n'
+        if self.__aligned:
+            md += '\\begin{aligned}\n'
+        for line in components:
+            md += f'{line}\\\\\n'
+        if len(components) > 0:
+            md = f'{md[:-3]}\n'#remove the latex newline '\\' on the last line  
+        if self.__aligned:
+            md += '\\end{aligned}\n'
+        md += '$$'
+        return md
 
 def isImageBlock(paragraph:Paragraph):
     return len(paragraph.children) == 1 and isinstance(paragraph.children[0], Image)

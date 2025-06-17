@@ -6,9 +6,18 @@ I *should* be **part of** `the previous` paragraph.
 
 another paragraph with [links][1].
 
-## image
+## math
 
-![**alt** tex]
+$$
+\begin{aligned}
+x &= 2y\\
+y &= 2x\\
+e &= \begin{bmatrix}
+1 & 2\\
+3 & 1
+\end{bmatrix}
+\end{aligned}
+$$
 
 # quote 
 
