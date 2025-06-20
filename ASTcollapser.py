@@ -56,23 +56,23 @@ class CompositeBlock(Block):
         slides = []
         currentHeight = 0
         currentSlide = []
-        for child in self.children():
-            if currentHeight + child.height() > lines:
+        for component in self.components():
+            if currentHeight + component.height() > lines:
                 slides.append(self.mdSlide(currentSlide, head))
-                currentSlide = [child]
-                currentHeight = child.height()
+                currentSlide = [component]
+                currentHeight = component.height()
             else:
-                currentSlide.append(child)
-                currentHeight += child.height()
+                currentSlide.append(component)
+                currentHeight += component.height()
         slides.append(self.mdSlide(currentSlide, head))
         return slides
     @abstractmethod
-    def children(self) -> list:
+    def components(self) -> list:
         pass
     def height(self, lineWidth=30):
         cumulativeHeight = 0
-        for child in self.children():
-            cumulativeHeight += child.height()
+        for component in self.components():
+            cumulativeHeight += component.height()
         return cumulativeHeight
     #@abstractmethod
     def mdSlide(self, components:list, head:HeadingBlock) -> str:
@@ -113,7 +113,7 @@ class UnsupportedTokenException(Exception):
 
 def isMathBlock(paragraph:Paragraph, mathFence = '$$') -> bool:
     '''
-    mathblocks are not native to commonmark or mistletoe, this function checks if a paragraph is surrounded by the math fence
+    mathblocks are not native to commonmark or mistletoe, this function checks if a paragraph is surrounded by the math fence token
     '''
     startsWithDollars = isinstance(paragraph.children[0], RawText) and paragraph.children[0].content.startswith(mathFence)
     endsWithDollars = isinstance(paragraph.children[-1], RawText) and paragraph.children[-1].content.endswith(mathFence)
@@ -168,7 +168,7 @@ class ParagraphBlock(CompositeBlock):
                 line.append(child)
         lineList.append(line)
         return lineList
-    def children(self):
+    def components(self):
         return self.__sentences
     def mdSlide(self, components:list, head:HeadingBlock) -> str:
         md = ''
@@ -223,7 +223,7 @@ class ItemBlock(CompositeBlock):
                 #itemsDFS.append(child)
                 itemsDFS += child.items(level=level+1, indentSize=self.__indentSize, leader='')
         return itemsDFS
-    def children(self) -> list:
+    def components(self) -> list:
         return self.items()
 
 class ListBlock(CompositeBlock):
@@ -244,7 +244,7 @@ class ListBlock(CompositeBlock):
         for item in self.__items:
             itemsDFS += item.items(level=level, indentSize=indentSize, leader=leader)
         return itemsDFS
-    def children(self) -> list:
+    def components(self) -> list:
         return self.items()
     def __str__(self) -> str:
         cumulativeString = ''
@@ -273,7 +273,7 @@ class CodeBlock(CompositeBlock):
         self.__lines = []
         for lineContent in mdCodeFence.children[0].content.split('\n'):
             self.__lines.append(CodeLine(lineContent))
-    def children(self):
+    def components(self):
         return self.__lines
     def mdSlide(self, components:list, head:HeadingBlock) -> str:
         md = ''
@@ -291,7 +291,7 @@ class QuoteBlock(CompositeBlock):
         self.__children = []
         for child in self.__mdQuote.children:
             self.__children.append(asBlock(child))
-    def children(self):
+    def components(self):
         return self.__children
     def mdSlide(self, components:list, head:HeadingBlock) -> str:
         md = ''
@@ -330,18 +330,19 @@ class MathBlock(CompositeBlock):
     def __init__(self, mdParagraph:Paragraph):
         self.__aligned = False
         rawLines = [line for line in mdParagraph.children]
-        jointLines = (''.join([line.content for line in rawLines]))[2:-2]
+        jointLines = (''.join([line.content for line in rawLines]))[2:-2]#rawLines are surrounded by '$$' tokens so they are extracted out
         if jointLines.startswith('\\begin{aligned}') and jointLines.endswith('\\end{aligned}'):
             self.__aligned = True
             jointLines = jointLines[15:-13]
         multilineEnvironments = ['bmatrix','matrix']
         extractedBlocks = {}
-        #remove all multiline blocks while saving removed blocks to extracted blocks
+        #remove all multiline blocks (e.g. matrices) while saving removed blocks to extractedBlocks
         for env in multilineEnvironments:
             exME = extractedMathEnvironments(jointLines, env)
             jointLines = exME['replacedMathBlock']
             extractedBlocks[env] = exME['extractedBlocks']
         #now that all multiline blocks are gone, replace newline separators with $$nl$$ token
+        #this replacement is now safe since there are no multiline environments in the string
         jointLines = jointLines.replace('\\\\', '$$nl$$')
         #place all extracted blocks back
         for env in multilineEnvironments:
@@ -349,7 +350,7 @@ class MathBlock(CompositeBlock):
                 jointLines = jointLines.replace(f'$${env}$$', block, 1)
         #safely split the math block using the $$nl$$ token
         self.__lines = [MathLine(line) for line in jointLines.split('$$nl$$')]
-    def children(self):
+    def components(self):
         return self.__lines
     def mdSlide(self, components:list, head:HeadingBlock) -> str:
         md = ''
