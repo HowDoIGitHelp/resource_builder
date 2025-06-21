@@ -9,12 +9,14 @@ from mistletoe.token import Token
 import math
 import re
 
+LINES = 6
+LINEWIDTH = 50
 class Component(ABC):
     '''
     CompositeBlocks are made up of Components
     '''
     @abstractmethod
-    def height(self, lineWidth=30):
+    def height(self, lineWidth=LINEWIDTH):
         pass
 
 class Sentence(Component):
@@ -29,14 +31,14 @@ class Sentence(Component):
         return [] 
     def size(self) -> int:
         return len(self.__sentence)
-    def height(self, lineWidth=30):
+    def height(self, lineWidth=LINEWIDTH):
         return math.ceil(self.size() / lineWidth)
 
 class Head:
     def __init__(self, mdHeading:Heading):
         self.__level = mdHeading.level
         self.__content = collapse(mdHeading.children)
-    def height(self, lineWidth=30):
+    def height(self, lineWidth=LINEWIDTH):
         return 0 
     def headText(self) -> str:
         return str(self.__content)
@@ -50,14 +52,14 @@ class Block(ABC):
     @abstractmethod
     def slideContent(self, head:Head):
         pass
-    def mdSlides(self, head:Head, lines=4):
+    def mdSlides(self, head:Head, lines=LINES):
         return f'{self.slideContent(head)}\n---\n\n' 
 
 class CompositeBlock(Block):
     '''
     composite blocks can be split into multiple slides, split is based on number of lines
     '''
-    def slides(self, head:Head, lines=4) -> list:
+    def slides(self, head:Head, lines=LINES) -> list:
         slides = []
         currentHeight = 0
         currentSlide = []
@@ -71,7 +73,7 @@ class CompositeBlock(Block):
                 currentHeight += component.height()
         slides.append(self.slideContent(currentSlide, head))
         return slides
-    def mdSlides(self, head:Head, lines=4) -> str:
+    def mdSlides(self, head:Head, lines=LINES) -> str:
         subDeck = ''
         for slide in self.slides(head, lines):
             subDeck += f'{slide}\n'
@@ -80,7 +82,7 @@ class CompositeBlock(Block):
     @abstractmethod
     def components(self) -> list:
         pass
-    def height(self, lineWidth=30):
+    def height(self, lineWidth=LINEWIDTH):
         cumulativeHeight = 0
         for component in self.components():
             cumulativeHeight += component.height()
@@ -201,10 +203,10 @@ class IndentedListItem(Component):
         self.__prefix += leader
     def __str__(self) -> str:
         return f'{self.__prefix}{self.__content}'
-    def height(self, lineWidth=30) -> int:
+    def height(self, lineWidth=LINEWIDTH) -> int:
         return math.ceil(len(str(self)) / lineWidth)
 
-class ItemBlock(CompositeBlock):
+class ItemBlock:
     def __init__(self, mdContent:Block):
         self.__leader = mdContent.leader
         self.__content = mdContent
@@ -240,7 +242,7 @@ class ListBlock(CompositeBlock):
         self.__items = []
         for item in self.__mdList.children:
             self.__items.append(asBlock(item))
-    def height(self, lineWidth=30):
+    def height(self, lineWidth=LINEWIDTH):
         cumulativeHeight = 0
         for item in self.__items:
             cumulativeHeight += item.height()
@@ -270,7 +272,7 @@ class ListBlock(CompositeBlock):
 class CodeLine(Component):
     def __init__(self, content):
         self.__content = content
-    def height(self, lineWidth=30):
+    def height(self, lineWidth=LINEWIDTH):
         return math.ceil(len(self.__content) / lineWidth)
     def __str__(self) -> str:
         return self.__content
@@ -313,7 +315,7 @@ class QuoteBlock(CompositeBlock):
         for child in self.__children:
             cumulativeString += f'> {child} '
         return cumulativeString[:-1]
-    def height(self, lineWidth=30) -> int:
+    def height(self, lineWidth=LINEWIDTH) -> int:
         cumulativeHeight = 0
         for child in self.__children:
             cumulativeHeight += math.ceil(len(str(child)) / lineWidth)
@@ -329,7 +331,7 @@ def extractedMathEnvironments(mathBlock, environment) -> dict:#does not support 
 class MathLine(Component):
     def __init__(self, mathTeX:str):
         self.__mathTeX = mathTeX
-    def height(self, lineWidth=30):
+    def height(self, lineWidth=LINEWIDTH):
         return self.__mathTeX.count('\\\\') + 1
     def __str__(self) -> str:
         return self.__mathTeX
@@ -396,7 +398,7 @@ class ImageBlock(Block):
         self.__altText:Sentence = collapse(self.__mdImage.children)
         self.__title = self.__mdImage.title
         self.__src = self.__mdImage.src
-    def height(self, lineWidth=30):
+    def height(self, lineWidth=LINEWIDTH):
         return 1
     def slideContent(self, head:Head):
         md = ''
