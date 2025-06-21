@@ -10,12 +10,15 @@ another paragraph with [links][1].
 
 $$
 \begin{aligned}
-x &= 2y\\
-y &= 2x\\
-e &= \begin{bmatrix}
-1 & 2\\
-3 & 1
-\end{bmatrix}
+S&=\{a,b,c,d,e\}\\
+\\
+\{a,b,c\}&\to\Bigg\{
+\begin{matrix}
+		(a,b,c)\\
+		(b,c,a)\\
+		\vdots\\
+		(b,a,c)\\
+	\end{matrix}\\
 \end{aligned}
 $$
 

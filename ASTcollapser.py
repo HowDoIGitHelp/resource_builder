@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from mistletoe import Document
 from mistletoe.markdown_renderer import MarkdownRenderer, LinkReferenceDefinition, BlankLine
 from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken, CodeFence, Quote
-from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis, Image
+from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis, Image, EscapeSequence
 from mistletoe.token import Token
 import math
 import re
@@ -32,14 +32,7 @@ class Sentence(Component):
     def height(self, lineWidth=30):
         return math.ceil(self.size() / lineWidth)
 
-class Block(ABC):
-    @abstractmethod
-    def height(self) -> int:
-        pass
-    def items(self, level=0, indentSize=0, leader=''):
-        return [IndentedListItem(self, level=level, indentSize=indentSize, leader=leader)]
-
-class HeadingBlock(Block):
+class Head:
     def __init__(self, mdHeading:Heading):
         self.__level = mdHeading.level
         self.__content = collapse(mdHeading.children)
@@ -48,24 +41,42 @@ class HeadingBlock(Block):
     def headText(self) -> str:
         return str(self.__content)
 
+class Block(ABC):
+    @abstractmethod
+    def height(self) -> int:
+        pass
+    def items(self, level=0, indentSize=0, leader=''):
+        return [IndentedListItem(self, level=level, indentSize=indentSize, leader=leader)]
+    @abstractmethod
+    def slideContent(self, head:Head):
+        pass
+    def mdSlides(self, head:Head, lines=4):
+        return f'{self.slideContent(head)}\n---\n\n' 
+
 class CompositeBlock(Block):
     '''
     composite blocks can be split into multiple slides, split is based on number of lines
     '''
-    def slides(self, head:HeadingBlock, lines=4) -> list:
+    def slides(self, head:Head, lines=4) -> list:
         slides = []
         currentHeight = 0
         currentSlide = []
         for component in self.components():
             if currentHeight + component.height() > lines:
-                slides.append(self.mdSlide(currentSlide, head))
+                slides.append(self.slideContent(currentSlide, head))
                 currentSlide = [component]
                 currentHeight = component.height()
             else:
                 currentSlide.append(component)
                 currentHeight += component.height()
-        slides.append(self.mdSlide(currentSlide, head))
+        slides.append(self.slideContent(currentSlide, head))
         return slides
+    def mdSlides(self, head:Head, lines=4) -> str:
+        subDeck = ''
+        for slide in self.slides(head, lines):
+            subDeck += f'{slide}\n'
+            subDeck += '\n---\n\n'
+        return subDeck
     @abstractmethod
     def components(self) -> list:
         pass
@@ -74,9 +85,6 @@ class CompositeBlock(Block):
         for component in self.components():
             cumulativeHeight += component.height()
         return cumulativeHeight
-    #@abstractmethod
-    def mdSlide(self, components:list, head:HeadingBlock) -> str:
-        pass
 
 class StrongSentence(Sentence):
     def __init__(self,sentence:Sentence, strongParts:list):
@@ -138,7 +146,7 @@ def asBlock(token:BlockToken) -> Block:
     elif isinstance(token, Paragraph):
         return ParagraphBlock(token)
     elif isinstance(token, Heading):
-        return HeadingBlock(token)
+        return Head(token)
     elif isinstance(token, List):
         return ListBlock(token)
     elif isinstance(token, ListItem):
@@ -170,7 +178,7 @@ class ParagraphBlock(CompositeBlock):
         return lineList
     def components(self):
         return self.__sentences
-    def mdSlide(self, components:list, head:HeadingBlock) -> str:
+    def slideContent(self, components:list, head:Head) -> str:
         md = ''
         md += f'# {head.headText()}\n'
         md += '\n'
@@ -251,7 +259,7 @@ class ListBlock(CompositeBlock):
         for items in self.items():
             cumulativeString += f'{items}\n'
         return cumulativeString[:-1]
-    def mdSlide(self, components:list, head:HeadingBlock) -> str:
+    def slideContent(self, components:list, head:Head) -> str:
         md = ''
         md += f'# {head.headText()}\n'
         md += '\n'
@@ -275,7 +283,7 @@ class CodeBlock(CompositeBlock):
             self.__lines.append(CodeLine(lineContent))
     def components(self):
         return self.__lines
-    def mdSlide(self, components:list, head:HeadingBlock) -> str:
+    def slideContent(self, components:list, head:Head) -> str:
         md = ''
         md += f'# {head.headText()}\n'
         md += '\n'
@@ -293,7 +301,7 @@ class QuoteBlock(CompositeBlock):
             self.__children.append(asBlock(child))
     def components(self):
         return self.__children
-    def mdSlide(self, components:list, head:HeadingBlock) -> str:
+    def slideContent(self, components:list, head:Head) -> str:
         md = ''
         md += f'# {head.headText()}\n'
         md += '\n'
@@ -326,11 +334,22 @@ class MathLine(Component):
     def __str__(self) -> str:
         return self.__mathTeX
 
+def rawTex(mathParagraph):
+    rawLines = [line for line in mathParagraph.children]
+    cumulativeString = ''
+    for span in mathParagraph.children:
+        if isinstance(span, EscapeSequence):
+            cumulativeString += f'\\{span.children[0].content}'
+        else:
+            cumulativeString += span.content
+    return cumulativeString[2:-2]
+        
+
+
 class MathBlock(CompositeBlock):
     def __init__(self, mdParagraph:Paragraph):
         self.__aligned = False
-        rawLines = [line for line in mdParagraph.children]
-        jointLines = (''.join([line.content for line in rawLines]))[2:-2]#rawLines are surrounded by '$$' tokens so they are extracted out
+        jointLines = rawTex(mdParagraph) 
         if jointLines.startswith('\\begin{aligned}') and jointLines.endswith('\\end{aligned}'):
             self.__aligned = True
             jointLines = jointLines[15:-13]
@@ -352,11 +371,11 @@ class MathBlock(CompositeBlock):
         self.__lines = [MathLine(line) for line in jointLines.split('$$nl$$')]
     def components(self):
         return self.__lines
-    def mdSlide(self, components:list, head:HeadingBlock) -> str:
+    def slideContent(self, components:list, head:Head) -> str:
         md = ''
         md += f'# {head.headText()}\n'
         md += '\n'
-        md += f'$$\n'
+        md += f'<div>\n$$\n'
         if self.__aligned:
             md += '\\begin{aligned}\n'
         for line in components:
@@ -365,7 +384,7 @@ class MathBlock(CompositeBlock):
             md = f'{md[:-3]}\n'#remove the latex newline '\\' on the last line  
         if self.__aligned:
             md += '\\end{aligned}\n'
-        md += '$$'
+        md += '$$\n</div>'
         return md
 
 def isImageBlock(paragraph:Paragraph):
@@ -379,8 +398,13 @@ class ImageBlock(Block):
         self.__src = self.__mdImage.src
     def height(self, lineWidth=30):
         return 1
-    def mdContent(self):
-        pass
+    def slideContent(self, head:Head):
+        md = ''
+        md += f'# {head.headText()}\n'
+        md += '\n'
+        md += f'![{self.__altText}]({self.__src})'
+        return md
+
 
 def collapse(spanList:list) -> Sentence:
     '''
