@@ -152,7 +152,7 @@ def asBlock(token:BlockToken) -> Block:
     elif isinstance(token, List):
         return ListBlock(token)
     elif isinstance(token, ListItem):
-        return ItemBlock(token)
+        return Item(token)
     elif isinstance(token, CodeFence):
         return CodeBlock(token)
     elif isinstance(token, Quote):
@@ -206,7 +206,7 @@ class IndentedListItem(Component):
     def height(self, lineWidth=LINEWIDTH) -> int:
         return math.ceil(len(str(self)) / lineWidth)
 
-class ItemBlock:
+class Item:
     def __init__(self, mdContent:Block):
         self.__leader = mdContent.leader
         self.__content = mdContent
@@ -350,10 +350,10 @@ def rawTex(mathParagraph):
 
 class MathBlock(CompositeBlock):
     def __init__(self, mdParagraph:Paragraph):
-        self.__aligned = False
+        self.__isAligned = False
         jointLines = rawTex(mdParagraph) 
         if jointLines.startswith('\\begin{aligned}') and jointLines.endswith('\\end{aligned}'):
-            self.__aligned = True
+            self.__isAligned = True
             jointLines = jointLines[15:-13]
         multilineEnvironments = ['bmatrix','matrix']
         extractedBlocks = {}
@@ -378,16 +378,25 @@ class MathBlock(CompositeBlock):
         md += f'# {head.headText()}\n'
         md += '\n'
         md += f'<div>\n$$\n'
-        if self.__aligned:
+        if self.__isAligned:
             md += '\\begin{aligned}\n'
         for line in components:
             md += f'{line}\\\\\n'
         if len(components) > 0:
             md = f'{md[:-3]}\n'#remove the latex newline '\\' on the last line  
-        if self.__aligned:
+        if self.__isAligned:
             md += '\\end{aligned}\n'
         md += '$$\n</div>'
         return md
+    def __str__(self) -> str:
+        cumulativeString = ''
+        for component in self.__lines:
+            cumulativeString += f'{str(component)} \\\\' 
+
+        if self.__isAligned:
+            return '<div> $$ \\begin{aligned} ' + cumulativeString + ' \\end{aligned} $$ </div>'
+        else:
+            return '<div> $$ ' + cumulativeString + ' $$ </div>'
 
 def isImageBlock(paragraph:Paragraph):
     return len(paragraph.children) == 1 and isinstance(paragraph.children[0], Image)

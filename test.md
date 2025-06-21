@@ -8,19 +8,18 @@ another paragraph with [links][1].
 
 ## math
 
-$$
-\begin{aligned}
-S&=\{a,b,c,d,e\}\\
-\\
-\{a,b,c\}&\to\Bigg\{
-\begin{matrix}
-		(a,b,c)\\
-		(b,c,a)\\
-		\vdots\\
-		(b,a,c)\\
-	\end{matrix}\\
-\end{aligned}
-$$
+> $$
+> \begin{aligned}
+> P(n,r)&=\frac{n!}{(n-r)!}\\
+> P(n,r)&=\frac{n(n-1)(n-2)\cdots(n-r+1)(n-r)(n-r-1)(n-r-2)\cdots(1)}{(n-r)(n-r-1)(n-r-2)\cdots(1)}
+> \end{aligned}
+> $$
+>
+> The product **$(n-r)(n-r-1)(n-r-2)\cdots(1)$** gets cancelled out leaving:
+> 
+> $$
+> P(n,r)=n(n-1)(n-2)\cdots(n-r+1)
+> $$
 
 # quote 
 
