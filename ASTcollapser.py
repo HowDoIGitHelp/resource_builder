@@ -200,7 +200,12 @@ class SentenceDelimiter(SpanToken):
     def __init__(self):
         self.content = ''
 
-def delimitedTextToken(textToken:RawText):
+def delimitedTextToken(textToken:RawText) -> list:
+    '''
+    this function takes a RawText span token and splits it into multiple RawText tokens with SentenceDelimiters in between
+    the delimiter is the string '. '
+    this function will not split inline math pharases
+    '''
     pattern = re.compile(r'\$.*?\$')
     inlineMathParts = re.findall(pattern, textToken.content)
     rawTextContent = pattern.sub('$inlineMath$', textToken.content)
@@ -422,7 +427,11 @@ class QuoteBlock(CompositeBlock):
         return cumulativeHeight
 
 
-def extractedMathEnvironments(mathBlock, environment) -> dict:#does not support nested environments e.g. matrix inside a matrix
+def extractedMathEnvironments(mathBlock, environment) -> dict:
+    '''
+    this function extracts multiline math environments (e.g. matrix, bmatrix) so that the MathBlock.__init__() can safely split math blocks by newlines 
+    it does not support nested multiline environments e.g. matrix inside a matrix
+    '''
     pattern = Template(r'\\begin{$env}.*?\\end{$env}')
     multilinePattern = re.compile(pattern.substitute(env=environment))
     multilineBlocks = multilinePattern.findall(mathBlock)
@@ -508,7 +517,7 @@ class MathBlock(CompositeBlock):
         else:
             return '<div> $$ ' + cumulativeString + ' $$ </div>'
 
-
+#implement the CompoiteBlock specialization TableBlock
 def isImageBlock(paragraph:Paragraph):
     return len(paragraph.children) == 1 and isinstance(paragraph.children[0], Image)
 
