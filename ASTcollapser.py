@@ -198,16 +198,24 @@ def asBlock(token:BlockToken) -> Block:
 class SentenceDelimiter(SpanToken):
 
     def __init__(self):
-        pass
-
+        self.content = ''
 
 def delimitedTextToken(textToken:RawText):
+    pattern = re.compile(r'\$.*?\$')
+    inlineMathParts = re.findall(pattern, textToken.content)
+    rawTextContent = pattern.sub('$inlineMath$', textToken.content)
     cumulativeTokenList = []
-    tokens = textToken.content.split('. ')
+    tokens = rawTextContent.split('. ')
     for token in tokens[:-1]:
         cumulativeTokenList += [RawText(f'{token}.'), SentenceDelimiter()]
     if tokens[-1] != '':
         cumulativeTokenList.append(RawText(tokens[-1]))
+    i = 0
+    while i < len(inlineMathParts):
+        for token in cumulativeTokenList:
+            for j in range(token.content.count('$inlineMath$')):
+                token.content = token.content.replace('$inlineMath$', inlineMathParts[i] ,1)
+                i += 1
     return cumulativeTokenList
 
 class ParagraphBlock(CompositeBlock):

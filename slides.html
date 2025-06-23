@@ -141,8 +141,7 @@
 
 # $\alpha$ equivalence:
 
-- Given a lambda calculus abstraction $\lambda x.
-- \mathscr{M}$, this abstraction's bound variable is $x$.
+- Given a lambda calculus abstraction $\lambda x. \mathscr{M}$, this abstraction's bound variable is $x$.
 - The bound variable $x$ may appear somewhere in $\mathscr{M}$, the body of the abstraction.
 
 
@@ -560,7 +559,7 @@ applytwice f x = f (f x)
 
 # Passing functions
 
-> <ASTcollapser.CodeBlock object at 0x7fd08c1808f0>
+> <ASTcollapser.CodeBlock object at 0x7f09bc246360>
 > The last type in the `->` series is the type the function produces (like it's return type) and everything else before it are parameter types.
 
 
@@ -831,7 +830,7 @@ ghci> (\x -> x * x) 4
 # Returning functions
 
 > By the way, bindings are haskell's representation of a mathematical let statement. When you see an `=` operator like the following:
-> <ASTcollapser.CodeBlock object at 0x7fd08c181550>
+> <ASTcollapser.CodeBlock object at 0x7f09bc0c0fc0>
 
 
 ---
@@ -876,8 +875,7 @@ ghci> (\x -> x * x) 4
 # Closure
 
 - Closures are still a direct consequence from lambda calculus' variable binding rules.
-- Specifically how the variables $x$ and $y$ are bound in innermost body of the lambda calculus abstraction $\lambda x.\lambda y.
-- \text{add }x $.
+- Specifically how the variables $x$ and $y$ are bound in innermost body of the lambda calculus abstraction $\lambda x.\lambda y. \text{add }x $.
 
 
 ---
