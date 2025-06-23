@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from mistletoe import Document
 from mistletoe.markdown_renderer import MarkdownRenderer, LinkReferenceDefinition, BlankLine
 from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken, CodeFence, Quote
-from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis, Image, EscapeSequence
+from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis, Image, EscapeSequence, SpanToken
 from mistletoe.token import Token
 import math
 import re
@@ -160,6 +160,19 @@ def asBlock(token:BlockToken) -> Block:
     else:
         raise UnsupportedTokenException(token)
 
+class SentenceDelimiter(SpanToken):
+    def __init__(self):
+        pass
+
+def delimitedTextToken(textToken:RawText):
+    cumulativeTokenList = []
+    tokens = textToken.content.split('. ')
+    for token in tokens[:-1]:
+        cumulativeTokenList += [RawText(f'{token}.'), SentenceDelimiter()]
+    if tokens[-1] != '':
+        cumulativeTokenList.append(RawText(tokens[-1]))
+    return cumulativeTokenList
+
 class ParagraphBlock(CompositeBlock):
     def __init__(self, mdParagraph:Paragraph):
         self.__mdParagraph = mdParagraph
@@ -168,16 +181,22 @@ class ParagraphBlock(CompositeBlock):
         '''
         Decompose a paragraph into list of span tokens based on SoftBreaks (single line breaks)
         '''
-        lineList:list = []
-        line:list = []
+        spanTokenList = []
         for child in self.__mdParagraph.children:
-            if isinstance(child,LineBreak):
-                lineList.append(line)
-                line = []
+            if isinstance(child, RawText):
+                spanTokenList += delimitedTextToken(child)
             else:
-                line.append(child)
-        lineList.append(line)
-        return lineList
+                spanTokenList.append(child)
+        sentenceComposites = []
+        rawSentences = []
+        for spanToken in spanTokenList:
+            if isinstance(spanToken, LineBreak) or isinstance(spanToken, SentenceDelimiter):
+                rawSentences.append(sentenceComposites)
+                sentenceComposites = []
+            else:
+                sentenceComposites.append(spanToken)
+        rawSentences.append(sentenceComposites)
+        return rawSentences
     def components(self):
         return self.__sentences
     def slideContent(self, components:list, head:Head) -> str:
@@ -268,7 +287,7 @@ class ListBlock(CompositeBlock):
         for line in components:
             md += f'{line}\n'
         return md
-
+    #override CompositeBlock.slides() to prevent orphaned list item children
 class CodeLine(Component):
     def __init__(self, content):
         self.__content = content
@@ -318,7 +337,7 @@ class QuoteBlock(CompositeBlock):
     def height(self, lineWidth=LINEWIDTH) -> int:
         cumulativeHeight = 0
         for child in self.__children:
-            cumulativeHeight += math.ceil(len(str(child)) / lineWidth)
+            cumulativeHeight += math.ceil(len(str(child)) / lineWidth)#change height calculation
         return cumulativeHeight
 
 def extractedMathEnvironments(mathBlock, environment) -> dict:#does not support nested environments e.g. matrix inside a matrix
