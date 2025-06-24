@@ -3,7 +3,7 @@ from string import Template
 from abc import ABC, abstractmethod
 from mistletoe import Document
 from mistletoe.markdown_renderer import MarkdownRenderer, LinkReferenceDefinition, BlankLine
-from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken, CodeFence, Quote
+from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken, CodeFence, Quote, Table, TableRow, TableCell
 from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis, Image, EscapeSequence, SpanToken
 from mistletoe.token import Token
 import math
@@ -80,18 +80,18 @@ class CompositeBlock(Block):
     composite blocks can be split into multiple slides, split is based on number of lines
     '''
 
-    def slides(self, head:Head, lines=LINES) -> list:
+    def slides(self, head:Head, lines=LINES, lineWidth=LINEWIDTH) -> list:
         slides = []
         currentHeight = 0
         currentSlide = []
         for component in self.components():
-            if currentHeight + component.height() > lines:
+            if currentHeight + component.height(lineWidth) > lines:
                 slides.append(self.slideContent(currentSlide, head))
                 currentSlide = [component]
-                currentHeight = component.height()
+                currentHeight = component.height(lineWidth)
             else:
                 currentSlide.append(component)
-                currentHeight += component.height()
+                currentHeight += component.height(lineWidth)
         slides.append(self.slideContent(currentSlide, head))
         return slides
 
@@ -109,7 +109,7 @@ class CompositeBlock(Block):
     def height(self, lineWidth=LINEWIDTH):
         cumulativeHeight = 0
         for component in self.components():
-            cumulativeHeight += component.height()
+            cumulativeHeight += component.height(lineWidth)
         return cumulativeHeight
 
 
@@ -192,6 +192,8 @@ def asBlock(token:BlockToken) -> Block:
         return CodeBlock(token)
     elif isinstance(token, Quote):
         return QuoteBlock(token)
+    elif isinstance(token, Table):
+        return TableBlock(token)
     else:
         raise UnsupportedTokenException(token)
 
@@ -298,7 +300,7 @@ class Item:
     def height(self):
         cumulativeHeight = 0
         for child in self.__children:
-            cumulativeHeight += child.height()
+            cumulativeHeight += child.height(lineWidth)
         return cumulativeHeight
 
     def content(self):
@@ -331,7 +333,7 @@ class ListBlock(CompositeBlock):
     def height(self, lineWidth=LINEWIDTH):
         cumulativeHeight = 0
         for item in self.__items:
-            cumulativeHeight += item.height()
+            cumulativeHeight += item.height(lineWidth)
         return cumulativeHeight
 
     def nthItem(self, n:int) -> Block:
@@ -517,7 +519,73 @@ class MathBlock(CompositeBlock):
         else:
             return '<div> $$ ' + cumulativeString + ' $$ </div>'
 
-#implement the CompoiteBlock specialization TableBlock
+
+class Cell:
+
+    def __init__(self, content:TableCell):
+        self.__content = collapse(content.children)
+        self.__align = content.align
+
+    def height(self, lineWidth=LINEWIDTH) -> int:
+        return self.__content.height(lineWidth)
+
+    def __str__(self) -> str:
+        return str(self.__content)
+
+class Row(Component):
+
+    def __init__(self, content:TableRow):
+        self.__cells = [Cell(child) for child in content.children]
+
+    def height(self, lineWidth=LINEWIDTH):
+        tallestCell = self.__cells[0]
+        for cell in self.__cells[1:]:
+            if cell.height(lineWidth) > tallestCell.height(lineWidth):
+                tallestCell = cell
+        return tallestCell.height(lineWidth)
+
+    def __str__(self) -> str:
+        cumulativeString = '|' if len(self.__cells) > 0 else '' 
+        for cell in self.__cells:
+            cumulativeString += f' {str(cell)} |'
+        return cumulativeString
+
+
+class TableBlock(CompositeBlock):
+    
+    def __init__(self, content:Table):
+        self.__header = Row(content.header)
+        self.__rows = [Row(child) for child in content.children]
+        self.__alignmentRow = '|' if len(content.header.children) > 0 else ''
+        for alignCode in content.column_align:
+            if alignCode is None:
+                self.__alignmentRow += '-----|'
+            elif alignCode == 0:
+                self.__alignmentRow += ':---:|'
+            else:
+                self.__alignmentRow += '----:|'
+
+
+    def height(self, lineWidth=LINEWIDTH):
+        cumulativeHeight = self.__header.height(lineWidth)
+        for row in self.__rows:
+            cumulativeHeight += row.height(lineWidth)
+        return cumulativeHeight
+
+    def components(self):
+        return self.__rows
+
+    def slideContent(self, components:list, head:Head):
+        md = ''
+        md += f'# {head.headText()}\n'
+        md += '\n'
+        md += f'{str(self.__header)}\n'
+        md += f'{str(self.__alignmentRow)}\n'
+        for row in components:
+            md += f'{str(row)}\n'
+        return md
+
+
 def isImageBlock(paragraph:Paragraph):
     return len(paragraph.children) == 1 and isinstance(paragraph.children[0], Image)
 
