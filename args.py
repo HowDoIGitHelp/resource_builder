@@ -1,0 +1,2 @@
+LINES = 6
+LINEWIDTH = 50

@@ -1,61 +1,40 @@
-import json
-from string import Template
 from abc import ABC, abstractmethod
-from mistletoe import Document
 from mistletoe.markdown_renderer import MarkdownRenderer, LinkReferenceDefinition, BlankLine
 from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken, CodeFence, Quote, Table, TableRow, TableCell
 from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis, Image, EscapeSequence, SpanToken
 from mistletoe.token import Token
+from head import Head
 import math
 import re
+from args import LINES, LINEWIDTH
+from component import Component, IndentedListItem, Sentence, MathLine, CodeLine, Row, collapse
+from utils import rawTex, extractedMathEnvironments, delimitedTextToken, SentenceDelimiter
 
 
-LINES = 6
-LINEWIDTH = 50
+class UnsupportedTokenException(Exception):
+
+    def __init__(self, token:BlockToken):
+        self.unsupportedToken = token
 
 
-class Component(ABC):
+def isImageBlock(paragraph:Paragraph):
+    return len(paragraph.children) == 1 and isinstance(paragraph.children[0], Image)
+
+def isMathBlock(paragraph:Paragraph, mathFence = '$$') -> bool:
     '''
-    CompositeBlocks are made up of Components
+    mathblocks are not native to commonmark or mistletoe, this function checks if a paragraph is surrounded by the math fence token
     '''
+    startsWithDollars = isinstance(paragraph.children[0], RawText) and paragraph.children[0].content.startswith(mathFence)
+    endsWithDollars = isinstance(paragraph.children[-1], RawText) and paragraph.children[-1].content.endswith(mathFence)
+    return startsWithDollars and endsWithDollars
 
-    @abstractmethod
-    def height(self, lineWidth=LINEWIDTH):
-        pass
-
-
-class Sentence(Component):
-    '''
-    base class that can be decorated by StrongSentence and EmphasizedSentence
-    '''
-
-    def __init__(self,sentence:str):
-        self.__sentence = sentence
-
-    def __str__(self) -> str:
-        return str(self.__sentence)
-
-    def importantParts(self) -> list:
-        return []
-
-    def size(self) -> int:
-        return len(self.__sentence)
-
-    def height(self, lineWidth=LINEWIDTH):
-        return math.ceil(self.size() / lineWidth)
-
-
-class Head:
-
-    def __init__(self, mdHeading:Heading):
-        self.__level = mdHeading.level
-        self.__content = collapse(mdHeading.children)
-
-    def height(self, lineWidth=LINEWIDTH):
-        return 0 
-
-    def headText(self) -> str:
-        return str(self.__content)
+def isInvisible(token:Token):
+    if isinstance(token, BlankLine):
+        return True
+    if isinstance(token, LinkReferenceDefinition):
+        return True
+    else:
+        return False
 
 
 class Block(ABC):
@@ -73,6 +52,32 @@ class Block(ABC):
 
     def mdSlides(self, head:Head, lines=LINES):
         return f'{self.slideContent(head)}\n---\n\n' 
+
+
+def asBlock(token:BlockToken) -> Block:
+    '''
+    convert mistletoe.block_token.BlockToken into Blocks
+    '''
+    if isinstance(token, Paragraph) and isMathBlock(token):
+        return MathBlock(token)
+    elif isinstance(token, Paragraph) and isImageBlock(token):
+        return ImageBlock(token)
+    elif isinstance(token, Paragraph):
+        return ParagraphBlock(token)
+    elif isinstance(token, Heading):
+        return Head(token)
+    elif isinstance(token, List):
+        return ListBlock(token)
+    elif isinstance(token, ListItem):
+        return Item(token)
+    elif isinstance(token, CodeFence):
+        return CodeBlock(token)
+    elif isinstance(token, Quote):
+        return QuoteBlock(token)
+    elif isinstance(token, Table):
+        return TableBlock(token)
+    else:
+        raise UnsupportedTokenException(token)
 
 
 class CompositeBlock(Block):
@@ -112,118 +117,6 @@ class CompositeBlock(Block):
             cumulativeHeight += component.height(lineWidth)
         return cumulativeHeight
 
-
-class StrongSentence(Sentence):
-
-    def __init__(self,sentence:Sentence, strongParts:list):
-        self.__sentence = sentence
-        self.__strongParts = strongParts
-
-    def __str__(self) -> str:
-        return str(self.__sentence)
-
-    def importantParts(self) -> list:
-        innerImportantParts = []
-        for part in self.__strongParts:
-            innerImportantParts += part.importantParts()
-        return self.__sentence.importantParts() + self.__strongParts + innerImportantParts
-
-    def size(self) -> int:
-        return self.__sentence.size()
-
-
-class EmphasizedSentence(Sentence):
-
-    def __init__(self,sentence:Sentence,emphasizedParts:list):
-        self.__sentence = sentence
-        self.__emphasizedParts = emphasizedParts
-
-    def __str__(self) -> str:
-        return str(self.__sentence)
-
-    def importantParts(self) -> list:
-        innerImportantParts = []
-        for part in self.__emphasizedParts:
-            innerImportantParts += part.importantParts()
-        return self.__sentence.importantParts() + self.__emphasizedParts + innerImportantParts
-
-    def size(self) -> int:
-        return self.__sentence.size()
-
-
-class UnsupportedTokenException(Exception):
-
-    def __init__(self, token:BlockToken):
-        self.unsupportedToken = token
-
-def isMathBlock(paragraph:Paragraph, mathFence = '$$') -> bool:
-    '''
-    mathblocks are not native to commonmark or mistletoe, this function checks if a paragraph is surrounded by the math fence token
-    '''
-    startsWithDollars = isinstance(paragraph.children[0], RawText) and paragraph.children[0].content.startswith(mathFence)
-    endsWithDollars = isinstance(paragraph.children[-1], RawText) and paragraph.children[-1].content.endswith(mathFence)
-    return startsWithDollars and endsWithDollars
-
-def isInvisible(token:Token):
-    if isinstance(token, BlankLine):
-        return True
-    if isinstance(token, LinkReferenceDefinition):
-        return True
-    else:
-        return False
-
-def asBlock(token:BlockToken) -> Block:
-    '''
-    convert mistletoe.block_token.BlockToken into Blocks
-    '''
-    if isinstance(token, Paragraph) and isMathBlock(token):
-        return MathBlock(token)
-    elif isinstance(token, Paragraph) and isImageBlock(token):
-        return ImageBlock(token)
-    elif isinstance(token, Paragraph):
-        return ParagraphBlock(token)
-    elif isinstance(token, Heading):
-        return Head(token)
-    elif isinstance(token, List):
-        return ListBlock(token)
-    elif isinstance(token, ListItem):
-        return Item(token)
-    elif isinstance(token, CodeFence):
-        return CodeBlock(token)
-    elif isinstance(token, Quote):
-        return QuoteBlock(token)
-    elif isinstance(token, Table):
-        return TableBlock(token)
-    else:
-        raise UnsupportedTokenException(token)
-
-class SentenceDelimiter(SpanToken):
-
-    def __init__(self):
-        self.content = ''
-
-def delimitedTextToken(textToken:RawText) -> list:
-    '''
-    this function takes a RawText span token and splits it into multiple RawText tokens with SentenceDelimiters in between
-    the delimiter is the string '. '
-    this function will not split inline math pharases
-    '''
-    pattern = re.compile(r'\$.*?\$')
-    inlineMathParts = re.findall(pattern, textToken.content)
-    rawTextContent = pattern.sub('$inlineMath$', textToken.content)
-    cumulativeTokenList = []
-    tokens = rawTextContent.split('. ')
-    for token in tokens[:-1]:
-        cumulativeTokenList += [RawText(f'{token}.'), SentenceDelimiter()]
-    if tokens[-1] != '':
-        cumulativeTokenList.append(RawText(tokens[-1]))
-    i = 0
-    while i < len(inlineMathParts):
-        for token in cumulativeTokenList:
-            for j in range(token.content.count('$inlineMath$')):
-                token.content = token.content.replace('$inlineMath$', inlineMathParts[i] ,1)
-                i += 1
-    return cumulativeTokenList
 
 class ParagraphBlock(CompositeBlock):
 
@@ -270,21 +163,39 @@ class ParagraphBlock(CompositeBlock):
         return cumulativeString[:-1]
 
 
-class IndentedListItem(Component):
+class Item:
 
-    def __init__(self, content:Block, indentSize=0, level=0, leader=''):
-        self.__level = level
-        self.__content = content
-        self.__leader = leader
-        self.__indentSize = indentSize
-        self.__prefix = ' ' * ((indentSize * level) - len(leader))
-        self.__prefix += leader
+    def __init__(self, mdContent:Block):
+        self.__leader = mdContent.leader
+        self.__content = mdContent
+        self.__indentSize = len(self.__leader) + 1
+        self.__children = []
+        for child in self.__content.children:
+            self.__children.append(asBlock(child))
 
-    def __str__(self) -> str:
-        return f'{self.__prefix}{self.__content}'
+    def height(self):
+        cumulativeHeight = 0
+        for child in self.__children:
+            cumulativeHeight += child.height(lineWidth)
+        return cumulativeHeight
 
-    def height(self, lineWidth=LINEWIDTH) -> int:
-        return math.ceil(len(str(self)) / lineWidth)
+    def content(self):
+        return self.__content
+
+    def items(self, level=0, indentSize=0, leader=''):
+        itemsDFS = []
+        if len(self.__children) > 0:
+            itemsDFS += self.__children[0].items(
+                    level=level+1, 
+                    indentSize=self.__indentSize, 
+                    leader=f'{self.__leader} '
+            )
+            for child in self.__children[1:]:
+                #itemsDFS.append(child)
+                itemsDFS += child.items(level=level+1, indentSize=self.__indentSize, leader='')
+        return itemsDFS
+    def components(self) -> list:
+        return self.items()
 
 
 class ListBlock(CompositeBlock):
@@ -328,17 +239,6 @@ class ListBlock(CompositeBlock):
         return md
     #override CompositeBlock.slides() to prevent orphaned list item children
 
-
-class CodeLine(Component):
-
-    def __init__(self, content):
-        self.__content = content
-
-    def height(self, lineWidth=LINEWIDTH):
-        return math.ceil(len(self.__content) / lineWidth)
-
-    def __str__(self) -> str:
-        return self.__content
 
 class CodeBlock(CompositeBlock):
 
@@ -392,42 +292,6 @@ class QuoteBlock(CompositeBlock):
         for child in self.__children:
             cumulativeHeight += math.ceil(len(str(child)) / lineWidth)#change height calculation
         return cumulativeHeight
-
-
-def extractedMathEnvironments(mathBlock, environment) -> dict:
-    '''
-    this function extracts multiline math environments (e.g. matrix, bmatrix) so that the MathBlock.__init__() can safely split math blocks by newlines 
-    it does not support nested multiline environments e.g. matrix inside a matrix
-    '''
-    pattern = Template(r'\\begin{$env}.*?\\end{$env}')
-    multilinePattern = re.compile(pattern.substitute(env=environment))
-    multilineBlocks = multilinePattern.findall(mathBlock)
-    replacedMathBlock = re.sub(multilinePattern, f'$${environment}$$', mathBlock)
-    return {'extractedBlocks':multilineBlocks, 'replacedMathBlock':replacedMathBlock}
-
-
-class MathLine(Component):
-
-    def __init__(self, mathTeX:str):
-        self.__mathTeX = mathTeX
-
-    def height(self, lineWidth=LINEWIDTH):
-        return self.__mathTeX.count('\\\\') + 1
-
-    def __str__(self) -> str:
-        return self.__mathTeX
-
-
-def rawTex(mathParagraph):
-    rawLines = [line for line in mathParagraph.children]
-    cumulativeString = ''
-    for span in mathParagraph.children:
-        if isinstance(span, EscapeSequence):
-            cumulativeString += f'\\{span.children[0].content}'
-        else:
-            cumulativeString += span.content
-    return cumulativeString[2:-2]
-        
 
 
 class MathBlock(CompositeBlock):
@@ -485,37 +349,6 @@ class MathBlock(CompositeBlock):
             return '<div> $$ ' + cumulativeString + ' $$ </div>'
 
 
-class Cell:
-
-    def __init__(self, content:TableCell):
-        self.__content = collapse(content.children)
-        self.__align = content.align
-
-    def height(self, lineWidth=LINEWIDTH) -> int:
-        return self.__content.height(lineWidth)
-
-    def __str__(self) -> str:
-        return str(self.__content)
-
-class Row(Component):
-
-    def __init__(self, content:TableRow):
-        self.__cells = [Cell(child) for child in content.children]
-
-    def height(self, lineWidth=LINEWIDTH):
-        tallestCell = self.__cells[0]
-        for cell in self.__cells[1:]:
-            if cell.height(lineWidth) > tallestCell.height(lineWidth):
-                tallestCell = cell
-        return tallestCell.height(lineWidth)
-
-    def __str__(self) -> str:
-        cumulativeString = '|' if len(self.__cells) > 0 else '' 
-        for cell in self.__cells:
-            cumulativeString += f' {str(cell)} |'
-        return cumulativeString
-
-
 class TableBlock(CompositeBlock):
     
     def __init__(self, content:Table):
@@ -551,9 +384,6 @@ class TableBlock(CompositeBlock):
         return md
 
 
-def isImageBlock(paragraph:Paragraph):
-    return len(paragraph.children) == 1 and isinstance(paragraph.children[0], Image)
-
 class ImageBlock(Block):
 
     def __init__(self, paragraph:Paragraph):
@@ -572,26 +402,4 @@ class ImageBlock(Block):
         md += f'![{self.__altText}]({self.__src})'
         return md
 
-
-def collapse(spanList:list) -> Sentence:
-    '''
-    Collapses a list of span tokens and returns Sentence
-    '''
-    emphasizedParts = []
-    strongParts = []
-    mdSpanList = []
-    for token in spanList:
-        if isinstance(token, Emphasis):
-            emphasizedParts.append(collapse(token.children))
-        elif isinstance(token, Strong):
-            strongParts.append(collapse(token.children))
-        with MarkdownRenderer() as renderer:
-            mdSpanList.append(renderer.render(token)[:-1])
-
-    s = Sentence(''.join(mdSpanList))
-    if len(emphasizedParts) > 0:
-        s = EmphasizedSentence(s,emphasizedParts)
-    if len(strongParts) > 0:
-        s = StrongSentence(s,strongParts)
-    return s
 
