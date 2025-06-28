@@ -43,7 +43,7 @@ class Block(ABC):
     def height(self) -> int:
         pass
 
-    def items(self, level=0, indentSize=0, leader=''):
+    def itemized(self, level=0, indentSize=0, leader=''):
         return [IndentedListItem(self, level=level, indentSize=indentSize, leader=leader)]
 
     @abstractmethod
@@ -187,21 +187,21 @@ class Item:
     def content(self):
         return self.__content
 
-    def items(self, level=0, indentSize=0, leader=''):
+    def itemized(self, level=0, indentSize=0, leader=''):
         itemsDFS = []
         if len(self.__children) > 0:
-            itemsDFS += self.__children[0].items(
+            itemsDFS += self.__children[0].itemized(
                     level=level+1, 
                     indentSize=self.__indentSize, 
                     leader=f'{self.__leader} '
             )
             for child in self.__children[1:]:
                 #itemsDFS.append(child)
-                itemsDFS += child.items(level=level+1, indentSize=self.__indentSize, leader='')
+                itemsDFS += child.itemized(level=level+1, indentSize=self.__indentSize, leader='')
         return itemsDFS
     
     def __str__(self) -> str:
-        components = self.items()
+        components = self.itemized()
         md = ''
         md += f'{components[0]}\n'
         for i in range(1, len(components)):
@@ -211,7 +211,7 @@ class Item:
         return md
 
     def components(self) -> list:
-        return self.items()
+        return self.itemized()
 
 
 class ListBlock(CompositeBlock):
@@ -221,7 +221,7 @@ class ListBlock(CompositeBlock):
         self.__children = []
         for item in self.__mdList.children:
             self.__children.append(asBlock(item))
-        #self.__itemsDFS = self.items()
+        #self.__itemsDFS = self.itemized()
 
     def height(self, lineWidth=LINEWIDTH):
         cumulativeHeight = 0
@@ -232,10 +232,10 @@ class ListBlock(CompositeBlock):
     def nthItem(self, n:int) -> Block:
         return self.__items[n]
     
-    def items(self, level=0, indentSize=0, leader='') -> list:
+    def itemized(self, level=0, indentSize=0, leader='') -> list:
         itemsDFS = []
         for item in self.__children:
-            itemsDFS += item.items(level=level, indentSize=indentSize, leader=leader)
+            itemsDFS += item.itemized(level=level, indentSize=indentSize, leader=leader)
         return itemsDFS
 
     def components(self) -> list:
@@ -243,7 +243,7 @@ class ListBlock(CompositeBlock):
 
     def __str__(self) -> str:
         cumulativeString = ''
-        for items in self.items():
+        for items in self.itemized():
             cumulativeString += f'{items}\n'
         return cumulativeString[:-1]
 
