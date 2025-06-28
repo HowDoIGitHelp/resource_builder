@@ -44,10 +44,10 @@ another paragraph with [links][1].
 # list
 
 - 1
-
+  
   asdasd
   - 1.1
-
+    
     poop
   - 1.2
     - 1.2.1
@@ -58,6 +58,10 @@ another paragraph with [links][1].
 # list 2
 
 1. 1
-   1. 1.1
 2. 2
-   1. 2.2
+   1. 2.1
+   2. 2.2
+      1. 2.2.1
+      2. 2.2.2
+      3. 2.2.3
+   3. 2.3

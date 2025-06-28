@@ -53,6 +53,9 @@ class Block(ABC):
     def mdSlides(self, head:Head, lines=LINES):
         return f'{self.slideContent(head)}\n---\n\n' 
 
+    def isLooseItem(self):
+        return False
+
 
 def asBlock(token:BlockToken) -> Block:
     '''
@@ -87,9 +90,9 @@ class CompositeBlock(Block):
 
     def slides(self, head:Head, lines=LINES, lineWidth=LINEWIDTH) -> list:
         slides = []
-        currentHeight = 0
-        currentSlide = []
-        for component in self.components():
+        currentHeight = self.components()[0].height(lineWidth) if len(self.components()) > 0 else 0
+        currentSlide = [self.components()[0]] if len(self.components()) > 0 else []
+        for component in self.components()[1:]:
             if currentHeight + component.height(lineWidth) > lines:
                 slides.append(self.slideContent(currentSlide, head))
                 currentSlide = [component]
@@ -160,8 +163,10 @@ class ParagraphBlock(CompositeBlock):
         cumulativeString = ''
         for sentence in self.__sentences:
             cumulativeString += f'{sentence} '
-        return cumulativeString[:-1]
+        return f'{cumulativeString[:-1]}'
 
+    def isLooseItem(self):
+        return True
 
 class Item:
 
@@ -173,7 +178,7 @@ class Item:
         for child in self.__content.children:
             self.__children.append(asBlock(child))
 
-    def height(self):
+    def height(self, lineWidth=LINEWIDTH):
         cumulativeHeight = 0
         for child in self.__children:
             cumulativeHeight += child.height(lineWidth)
@@ -194,6 +199,17 @@ class Item:
                 #itemsDFS.append(child)
                 itemsDFS += child.items(level=level+1, indentSize=self.__indentSize, leader='')
         return itemsDFS
+    
+    def __str__(self) -> str:
+        components = self.items()
+        md = ''
+        md += f'{components[0]}\n'
+        for i in range(1, len(components)):
+            if components[i].isLooseItem() and components[i].level() == components[i-1].level():
+                md += '\n'
+            md += f'{components[i]}\n'
+        return md
+
     def components(self) -> list:
         return self.items()
 
@@ -202,14 +218,15 @@ class ListBlock(CompositeBlock):
 
     def __init__(self, mdList:List):
         self.__mdList = mdList
-        self.__items = []
+        self.__children = []
         for item in self.__mdList.children:
-            self.__items.append(asBlock(item))
+            self.__children.append(asBlock(item))
+        #self.__itemsDFS = self.items()
 
     def height(self, lineWidth=LINEWIDTH):
         cumulativeHeight = 0
-        for item in self.__items:
-            cumulativeHeight += item.height(lineWidth)
+        for child in self.__children:
+            cumulativeHeight += child.height(lineWidth)
         return cumulativeHeight
 
     def nthItem(self, n:int) -> Block:
@@ -217,12 +234,12 @@ class ListBlock(CompositeBlock):
     
     def items(self, level=0, indentSize=0, leader='') -> list:
         itemsDFS = []
-        for item in self.__items:
+        for item in self.__children:
             itemsDFS += item.items(level=level, indentSize=indentSize, leader=leader)
         return itemsDFS
 
     def components(self) -> list:
-        return self.items()
+        return self.__children
 
     def __str__(self) -> str:
         cumulativeString = ''
@@ -234,10 +251,38 @@ class ListBlock(CompositeBlock):
         md = ''
         md += f'# {head.headText()}\n'
         md += '\n'
-        for line in components:
-            md += f'{line}\n'
+        md += f'{components[0]}\n'
+        for i in range(1, len(components)):
+            if components[i].isLooseItem() and components[i].level() == components[i-1].level():
+                md += '\n'
+            md += f'{components[i]}\n'
         return md
-    #override CompositeBlock.slides() to prevent orphaned list item children
+
+    def __slides(self, head:Head, lines=LINES, lineWidth=LINEWIDTH):
+        slides = []
+        currentHeight = 0
+        currentSlide = []
+        for i in range(len(self.components())-1):
+            component = self.components()[i]
+            nextComponent = self.components()[i+1]
+            if currentHeight + component.height(lineWidth) > lines and component.level() >= nextComponent.level():
+                slides.append(self.slideContent(currentSlide, head))
+                currentSlide = [component]
+                currentHeight = component.height(lineWidth)
+            else:
+                currentSlide.append(component)
+                currentHeight += component.height(lineWidth)
+        component = self.components()[-1]
+        if currentHeight + component.height(lineWidth) > lines and component.level():
+            slides.append(self.slideContent(currentSlide, head))
+            currentSlide = [component]
+            currentHeight = component.height(lineWidth)
+        else:
+            currentSlide.append(component)
+            currentHeight += component.height(lineWidth)
+
+        slides.append(self.slideContent(currentSlide, head))
+        return slides
 
 
 class CodeBlock(CompositeBlock):

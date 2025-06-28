@@ -91,6 +91,12 @@ class IndentedListItem(Component):
     def height(self, lineWidth=LINEWIDTH) -> int:
         return math.ceil(len(str(self)) / lineWidth)
 
+    def level(self):
+        return self.__level
+
+    def isLooseItem(self):
+        return self.__content.isLooseItem() and len(self.__leader) == 0
+
 
 class CodeLine(Component):
 
