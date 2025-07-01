@@ -251,11 +251,8 @@ class ListBlock(CompositeBlock):
         md = ''
         md += f'# {head.headText()}\n'
         md += '\n'
-        md += f'{components[0]}\n'
-        for i in range(1, len(components)):
-            if components[i].isLooseItem() and components[i].level() == components[i-1].level():
-                md += '\n'
-            md += f'{components[i]}\n'
+        for component in components:
+            md += f'{component}'
         return md
 
     def __slides(self, head:Head, lines=LINES, lineWidth=LINEWIDTH):

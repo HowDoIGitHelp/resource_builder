@@ -65,3 +65,13 @@ another paragraph with [links][1].
       2. 2.2.2
       3. 2.2.3
    3. 2.3
+
+# list 3
+
+After this discussion you will be able to:
+
+1. Reduce lambda calculus expressions (Optional)
+2. Create higher order functions
+3. Identify pure functions
+4. Explain how the advantages of statelessness in functional programming paradigm
+5. Explain the disadvantages of statelessness functional programming paradigm
