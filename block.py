@@ -151,11 +151,11 @@ class ParagraphBlock(CompositeBlock):
     def components(self):
         return self.__sentences
 
-    def slideContent(self, components:list, head:Head) -> str:
+    def slideContent(self, head:Head) -> str:
         md = ''
         md += f'# {head.headText()}\n'
         md += '\n'
-        for sentence in components:
+        for sentence in self.components():
             md += f'- {sentence}\n'
         return md
 
@@ -247,11 +247,11 @@ class ListBlock(CompositeBlock):
             cumulativeString += f'{items}\n'
         return cumulativeString[:-1]
 
-    def slideContent(self, components:list, head:Head) -> str:
+    def slideContent(self, head:Head) -> str:
         md = ''
         md += f'# {head.headText()}\n'
         md += '\n'
-        for component in components:
+        for component in self.components():
             md += f'{component}'
         return md
 
@@ -293,12 +293,12 @@ class CodeBlock(CompositeBlock):
     def components(self):
         return self.__lines
 
-    def slideContent(self, components:list, head:Head) -> str:
+    def slideContent(self, head:Head) -> str:
         md = ''
         md += f'# {head.headText()}\n'
         md += '\n'
         md += f'```{self.__language}\n'
-        for line in components:
+        for line in self.components():
             md += f'{line}\n'
         md += '```'
         return md
@@ -315,11 +315,11 @@ class QuoteBlock(CompositeBlock):
     def components(self):
         return self.__children
 
-    def slideContent(self, components:list, head:Head) -> str:
+    def slideContent(self, head:Head) -> str:
         md = ''
         md += f'# {head.headText()}\n'
         md += '\n'
-        for line in components:
+        for line in self.components():
             md += f'> {line}\n'
         return md
 
@@ -364,16 +364,16 @@ class MathBlock(CompositeBlock):
     def components(self):
         return self.__lines
 
-    def slideContent(self, components:list, head:Head) -> str:
+    def slideContent(self, head:Head) -> str:
         md = ''
         md += f'# {head.headText()}\n'
         md += '\n'
         md += f'<div>\n$$\n'
         if self.__isAligned:
             md += '\\begin{aligned}\n'
-        for line in components:
+        for line in self.components():
             md += f'{line}\\\\\n'
-        if len(components) > 0:
+        if len(self.components()) > 0:
             md = f'{md[:-3]}\n'#remove the latex newline '\\' on the last line  
         if self.__isAligned:
             md += '\\end{aligned}\n'
@@ -415,13 +415,13 @@ class TableBlock(CompositeBlock):
     def components(self):
         return self.__rows
 
-    def slideContent(self, components:list, head:Head):
+    def slideContent(self, head:Head):
         md = ''
         md += f'# {head.headText()}\n'
         md += '\n'
         md += f'{str(self.__header)}\n'
         md += f'{str(self.__alignmentRow)}\n'
-        for row in components:
+        for row in self.components():
             md += f'{str(row)}\n'
         return md
 

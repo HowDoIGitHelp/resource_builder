@@ -1,6 +1,7 @@
 from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken, CodeFence, Quote, Table, TableRow, TableCell
 from mistletoe.span_token import RawText, Emphasis, Strong, SpanToken, EscapeSequence
 from args import LINEWIDTH
+from component import collapse
 import re
 from string import Template
 
@@ -52,5 +53,6 @@ def rawTex(mathParagraph):
         if isinstance(span, EscapeSequence):
             cumulativeString += f'\\{span.children[0].content}'
         else:
-            cumulativeString += span.content
+            cumulativeString += f'{collapse([span])}'
+
     return cumulativeString[2:-2]

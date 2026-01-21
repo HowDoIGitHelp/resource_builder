@@ -19,8 +19,9 @@ class ProcessedParagraph(ProcessedBlockToken):
         with MarkdownRenderer() as renderer:
             rawParagraph = renderer.render(self.__blockToken)
         rawParagraph = rawParagraph.replace('\n',' ')
+        rawParagraph = rawParagraph.replace('$$ ', '$$\n')
+        rawParagraph = rawParagraph.replace(' $$', '\n$$')
         rawSentences = re.split(r'\.\ ', rawParagraph)
-        print(rawSentences)
         return '.\n'.join([sentence for sentence in rawSentences if sentence != '']) + '\n'
 
 def preprocess(file):

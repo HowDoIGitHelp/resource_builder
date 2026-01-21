@@ -323,7 +323,6 @@ To answer this question, we first identify what is the sample space and what is 
 ###### Examples
 
 - Given the same scenario above, what is the probability that two fruits selected at random are both bananas?
-
 - What is the probability that a ticket wins the 6/49​ lottery? Selecting a combination of 6 numbers from 1 to 49.
 - After uniformly shuffling the list **$[3,2,1,1,4,5]$**, what is the probability that the shuffling produces a sorted list?
 
