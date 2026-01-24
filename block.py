@@ -7,7 +7,7 @@ from head import Head
 import math
 import re
 from args import LINES, LINEWIDTH
-from component import Component, IndentedListItem, Sentence, MathLine, CodeLine, Row, collapse
+from component import Component, IndentedListItem, Sentence, MathLine, CodeLine, Row, StrongSentence, EmphasizedSentence, collapse
 from utils import rawTex, extractedMathEnvironments, delimitedTextToken, SentenceDelimiter
 
 
@@ -47,7 +47,11 @@ class Block(ABC):
         return [IndentedListItem(self, level=level, indentSize=indentSize, leader=leader)]
 
     @abstractmethod
-    def slideContent(self, head:Head):
+    def slideContent(self, components, head:Head):
+        '''
+        slideContent builds a slide based on given components and header.
+        The slide built depends on the type of block
+        '''
         pass
 
     def mdSlides(self, head:Head, lines=LINES):
@@ -89,6 +93,8 @@ class CompositeBlock(Block):
     '''
 
     def slides(self, head:Head, lines=LINES, lineWidth=LINEWIDTH) -> list:
+        if len(self.components()) == 0:
+            return []
         slides = []
         currentHeight = self.components()[0].height(lineWidth) if len(self.components()) > 0 else 0
         currentSlide = [self.components()[0]] if len(self.components()) > 0 else []
@@ -123,9 +129,11 @@ class CompositeBlock(Block):
 
 class ParagraphBlock(CompositeBlock):
 
-    def __init__(self, mdParagraph:Paragraph):
+    def __init__(self, mdParagraph:Paragraph, verbose = False):
         self.__mdParagraph = mdParagraph
         self.__sentences = [collapse(spanList) for spanList in self.decompose()]
+        if not verbose:
+            self.__sentences = [sentence for sentence in self.__sentences if (isinstance(sentence, EmphasizedSentence) or isinstance(sentence, StrongSentence))]
 
     def decompose(self) -> list:
         '''
@@ -442,4 +450,5 @@ class ImageBlock(Block):
         md += f'# {head.headText()}\n'
         md += '\n'
         md += f'![{self.__altText}]({self.__src})'
+        md += '\n'
         return md
