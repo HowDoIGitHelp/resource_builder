@@ -61,7 +61,7 @@ class Block(ABC):
         return False
 
 
-def asBlock(token:BlockToken) -> Block:
+def asBlock(token:BlockToken, verbose = True) -> Block:
     '''
     convert mistletoe.block_token.BlockToken into Blocks
     '''
@@ -70,7 +70,7 @@ def asBlock(token:BlockToken) -> Block:
     elif isinstance(token, Paragraph) and isImageBlock(token):
         return ImageBlock(token)
     elif isinstance(token, Paragraph):
-        return ParagraphBlock(token)
+        return ParagraphBlock(token, verbose)
     elif isinstance(token, Heading):
         return Head(token)
     elif isinstance(token, List):
@@ -129,7 +129,7 @@ class CompositeBlock(Block):
 
 class ParagraphBlock(CompositeBlock):
 
-    def __init__(self, mdParagraph:Paragraph, verbose = False):
+    def __init__(self, mdParagraph:Paragraph, verbose = True):
         self.__mdParagraph = mdParagraph
         self.__sentences = [collapse(spanList) for spanList in self.decompose()]
         if not verbose:
@@ -184,7 +184,7 @@ class Item:
         self.__indentSize = len(self.__leader) + 1
         self.__children = []
         for child in self.__content.children:
-            self.__children.append(asBlock(child))
+            self.__children.append(asBlock(child, verbose = True))
 
     def height(self, lineWidth=LINEWIDTH):
         cumulativeHeight = 0
@@ -228,7 +228,7 @@ class ListBlock(CompositeBlock):
         self.__mdList = mdList
         self.__children = []
         for item in self.__mdList.children:
-            self.__children.append(asBlock(item))
+            self.__children.append(asBlock(item, verbose = True))
         #self.__itemsDFS = self.itemized()
 
     def height(self, lineWidth=LINEWIDTH):
@@ -318,7 +318,7 @@ class QuoteBlock(CompositeBlock):
         self.__mdQuote = mdContent
         self.__children = []
         for child in self.__mdQuote.children:
-            self.__children.append(asBlock(child))
+            self.__children.append(asBlock(child, verbose = True))
 
     def components(self):
         return self.__children
