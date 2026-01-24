@@ -9,10 +9,17 @@ class Head:
         self.__content = collapse(mdHeading.children)
 
     def height(self, lineWidth=LINEWIDTH):
-        return 0 
+        return 0
 
     def headText(self) -> str:
         return str(self.__content)
 
+    def level(self):
+        return self.__level
 
-
+    def mdSlides(self) -> str:
+        md = ''
+        md += 'class: center, middle\n'
+        md += f'# {self.headText()}'
+        md += '\n\n---\n'
+        return md
