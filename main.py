@@ -9,12 +9,11 @@ def main():
     file = open('Counting and Discrete Probability.md', 'r')
     processedMD = preprocess(open('Counting and Discrete Probability.md', 'r'))
     currentHead = None
-    for child in Document(processedMD).children:
+    for child in Document(file.read()).children:
         if isinstance(child, Heading):
             currentHead = Head(child)
         else:
-            print(asBlock(child).slideContent(head = currentHead))
-            print("\n---\n")
+            print(asBlock(child).mdSlides(head = currentHead))
 
 if __name__ == "__main__":
     main()
