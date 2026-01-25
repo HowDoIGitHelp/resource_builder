@@ -9,7 +9,6 @@ import argparse
 def main(args):
     file = open(args.source, 'r')
     processedMD = preprocess(file)
-    open('temp.md','w+').write(processedMD)
     currentHead = None
     preamble = open('slidesPre.html','r').read().replace('{Title}', args.source)
     postamble = open('slidesPost.html','r').read()
