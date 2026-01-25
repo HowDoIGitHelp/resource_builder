@@ -14,7 +14,11 @@ def main(args):
     preamble = open('slidesPre.html','r').read().replace('{Title}', args.source)
     postamble = open('slidesPost.html','r').read()
 
-    outputFileName = f"{args.source.split('.')[0]}.html"
+    if args.output is not None:
+        outputFileName = args.output
+    else:
+        outputFileName = f"{args.source.split('.')[0]}.html"
+
     output = open(outputFileName, 'w+')
     output.write(preamble)
 
@@ -30,6 +34,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s','--source')
+    parser.add_argument('-s', '--source')
+    parser.add_argument('-o', '--output')
     args = parser.parse_args()
     main(args)
