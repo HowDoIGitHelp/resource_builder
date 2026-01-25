@@ -1126,12 +1126,7 @@ $$
 
 # Bayes' Theorem
 
-> **$\frac{1}{4}$** is calculated using the following lemma**: **$p(b \cap (R \cup M))= p(b|R)p(R)+p(b|M)p(M)$ The proof of this lemma, (recall conditional probability) $$ \begin{aligned} p(b|R)p(R)+p(b|M)p(M)&=\frac{p(b \cap R)}{p(R)}p(R)+\frac{p(b \cap M)}{p(M)}p(M)\ &=p(b \cap R)+p(b \cap M) - 0\ &=p(b \cap R)+p(b \cap M) - p((b \cap R) \cap (b \cap M))*\\
-&=p((b \cap R) \cup p(b \cap M))\\
-&=p(b \cap (R \cup  M))
-\end{aligned}
-$$
-*$p((b \cap R) \cap (b \cap M))=0$** because a box cannot be both R and M at the same time, therefore there is zero probability that this intersection of events happens. I added this so that the use of union of events theorem is clearer. Therefore we get **$\frac{1}{4}$** like this: $$ \begin{aligned} p(b|\overline{B})&=p(b|R \cup M)\\&=\frac{p(b \cap (R \cup M))}{p(R \cup M)}\\&=\frac{p(b|R)p(R)+p(b|M)p(M)}{p(R \cup M)}\ &=\frac{0(\frac{1}{3})+\frac{1}{2}(\frac{1}{3})}{\frac{2}{3}}\ p(b|\overline{B})&=\frac{3}{12}=\frac{1}{4} \end{aligned} $$
+> **$\frac{1}{4}$** is calculated using the following lemma**: **$p(b \cap (R \cup M))= p(b|R)p(R)+p(b|M)p(M)$ The proof of this lemma, (recall conditional probability) $$ \begin{aligned} p(b|R)p(R)+p(b|M)p(M)&=\frac{p(b \cap R)}{p(R)}p(R)+\frac{p(b \cap M)}{p(M)}p(M)\ &=p(b \cap R)+p(b \cap M) - 0\ &=p(b \cap R)+p(b \cap M) - p((b \cap R) \cap (b \cap M))\ &=p((b \cap R) \cup p(b \cap M))\ &=p(b \cap (R \cup  M)) \end{aligned} $$ $p((b \cap R) \cap (b \cap M))=0$ because a box cannot be both R and M at the same time, therefore there is zero probability that this intersection of events happens. I added this so that the use of union of events theorem is clearer. Therefore we get **$\frac{1}{4}$** like this: $$ \begin{aligned} p(b|\overline{B})&=p(b|R \cup M)\\&=\frac{p(b \cap (R \cup M))}{p(R \cup M)}\\&=\frac{p(b|R)p(R)+p(b|M)p(M)}{p(R \cup M)}\ &=\frac{0(\frac{1}{3})+\frac{1}{2}(\frac{1}{3})}{\frac{2}{3}}\ p(b|\overline{B})&=\frac{3}{12}=\frac{1}{4} \end{aligned} $$
 
 
 ---

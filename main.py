@@ -4,17 +4,21 @@ from mistletoe import Document
 from mistletoe.block_token import Heading
 from component import collapse
 from head import Head
+import argparse
 
-def main():
-    file = open('Counting and Discrete Probability.md', 'r')
-    processedMD = preprocess(open('Counting and Discrete Probability.md', 'r'))
+def main(args):
+    file = open(args.source, 'r')
+    processedMD = preprocess(file)
+    open('temp.md','w+').write(processedMD)
     currentHead = None
-    preamble = open('slidesPre.html','r').read()
+    preamble = open('slidesPre.html','r').read().replace('{Title}', args.source)
     postamble = open('slidesPost.html','r').read()
-    output = open('slides.html', 'w+')
+
+    outputFileName = f"{args.source.split('.')[0]}.html"
+    output = open(outputFileName, 'w+')
     output.write(preamble)
 
-    for child in Document(file.read()).children:
+    for child in Document(processedMD).children:
         if isinstance(child, Heading):
             currentHead = Head(child)
             if currentHead.level() < 4:
@@ -25,4 +29,7 @@ def main():
     output.write(postamble)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s','--source')
+    args = parser.parse_args()
+    main(args)

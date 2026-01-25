@@ -578,12 +578,12 @@ To answer the question earlier, what exactly is the probability of the selected 
 > \begin{aligned}
 > p(b|R)p(R)+p(b|M)p(M)&=\frac{p(b \cap R)}{p(R)}p(R)+\frac{p(b \cap M)}{p(M)}p(M)\\
 > &=p(b \cap R)+p(b \cap M) - 0\\
-> &=p(b \cap R)+p(b \cap M) - p((b \cap R) \cap (b \cap M))*\\
+> &=p(b \cap R)+p(b \cap M) - p((b \cap R) \cap (b \cap M))\\
 > &=p((b \cap R) \cup p(b \cap M))\\
 > &=p(b \cap (R \cup  M))
 > \end{aligned}
 > $$
-> *$p((b \cap R) \cap (b \cap M))=0$** because a box cannot be both R and M at the same time, therefore there is zero probability that this intersection of events happens. I added this so that the use of union of events theorem is clearer.
+> $p((b \cap R) \cap (b \cap M))=0$ because a box cannot be both R and M at the same time, therefore there is zero probability that this intersection of events happens. I added this so that the use of union of events theorem is clearer.
 >
 > Therefore we get **$\frac{1}{4}$** like this:
 > $$
