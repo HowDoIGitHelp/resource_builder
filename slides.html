@@ -1,47 +1,12 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Title</title>
-    <meta charset="utf-8">
-    <style>
-      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
-      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
-      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
-
-      body { font-family: 'Droid Serif'; }
-      h1, h2, h3 {
-        font-family: 'Yanone Kaffeesatz';
-        font-weight: normal;
-      }
-      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
-      p img {
-        max-width: 100%;
-        height: auto;
-        display: block;
-      }
-      .remark-slide {
-        display: block;
-        height: 100%;
-      }
-      .remark-slide > .middle {
-        justify-content: center;
-      }
-      .remark-slide-content {
-        display: flex;
-        flex-direction: column;
-        height: 95%;
-        justify-content: space-between;
-      }
-      .remark-slide-content > :nth-last-child(2) {
-        padding-bottom: 4em;
-      }
-      .remark-slide-content > :first-child {
-        padding-bottom: 0em;
-      }
-    </style>
-  </head>
-  <body>
-    <textarea id="source">
+    <head>
+        <title>Title</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="slides.css">
+    </head>
+        <body>
+            <textarea id="source">
 class: center, middle
 # Counting and Discrete Probability
 
@@ -1362,23 +1327,23 @@ $$
 
 ---
 
-    </textarea>
-    <script>
-  MathJax = {
-    tex: {
-      inlineMath: [['$', '$'], ['\\(', '\\)']],  // Inline math delimiters
-      displayMath: [['$$', '$$'], ['\\[', '\\]']],  // Display math delimiters
-      packages: {'[+]': ['ams']},  // Load the AMS extensions
-      processEnvironments: true,   // Required for \begin{align}, \begin{aligned}, etc.
-    },
-    loader: {load: ['[tex]/ams']},  // Explicitly load the 'ams' package
-  };
-</script>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
-    </script>
-    <script>
-    var slideshow = remark.create({ ratio: "16:9" });
-    </script>
-  </body>
+        </textarea>
+        <script>
+            MathJax = {
+                tex: {
+                    inlineMath: [['$', '$'], ['\\(', '\\)']],    // Inline math delimiters
+                    displayMath: [['$$', '$$'], ['\\[', '\\]']],    // Display math delimiters
+                    packages: {'[+]': ['ams']},    // Load the AMS extensions
+                    processEnvironments: true,     // Required for \begin{align}, \begin{aligned}, etc.
+                },
+                loader: {load: ['[tex]/ams']},    // Explicitly load the 'ams' package
+            };
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+        <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+        </script>
+        <script>
+            var slideshow = remark.create({ ratio: "16:9" });
+        </script>
+    </body>
 </html>
