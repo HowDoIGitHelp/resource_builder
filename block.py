@@ -44,6 +44,9 @@ class Block(ABC):
         pass
 
     def itemized(self, level=0, indentSize=0, leader=''):
+        '''
+        Any block can be itemized (used as a list item), a single block when itemized returns a list containing one IndentedListItem
+        '''
         return [IndentedListItem(self, level=level, indentSize=indentSize, leader=leader)]
 
     @abstractmethod
@@ -196,6 +199,9 @@ class Item:
         return self.__content
 
     def itemized(self, level=0, indentSize=0, leader=''):
+        '''
+        itemizing an item returns the item and any nested list items children
+        '''
         itemsDFS = []
         if len(self.__children) > 0:
             itemsDFS += self.__children[0].itemized(
@@ -228,7 +234,7 @@ class ListBlock(CompositeBlock):
         self.__mdList = mdList
         self.__children = []
         for item in self.__mdList.children:
-            self.__children.append(asBlock(item, verbose = True))
+            self.__children.append(asBlock(item, verbose = True)) #are always ListItem instances probably
         #self.__itemsDFS = self.itemized()
 
     def height(self, lineWidth=LINEWIDTH):
@@ -262,33 +268,6 @@ class ListBlock(CompositeBlock):
         for component in components:
             md += f'{component}'
         return md
-
-    def __slides(self, head:Head, lines=LINES, lineWidth=LINEWIDTH):
-        slides = []
-        currentHeight = 0
-        currentSlide = []
-        for i in range(len(self.components())-1):
-            component = self.components()[i]
-            nextComponent = self.components()[i+1]
-            if currentHeight + component.height(lineWidth) > lines and component.level() >= nextComponent.level():
-                slides.append(self.slideContent(currentSlide, head))
-                currentSlide = [component]
-                currentHeight = component.height(lineWidth)
-            else:
-                currentSlide.append(component)
-                currentHeight += component.height(lineWidth)
-        component = self.components()[-1]
-        if currentHeight + component.height(lineWidth) > lines and component.level():
-            slides.append(self.slideContent(currentSlide, head))
-            currentSlide = [component]
-            currentHeight = component.height(lineWidth)
-        else:
-            currentSlide.append(component)
-            currentHeight += component.height(lineWidth)
-
-        slides.append(self.slideContent(currentSlide, head))
-        return slides
-
 
 class CodeBlock(CompositeBlock):
 
