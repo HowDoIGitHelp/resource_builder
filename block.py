@@ -407,7 +407,7 @@ class TableBlock(CompositeBlock):
         self.__alignmentRow = '|' if len(content.header.children) > 0 else ''
         for alignCode in content.column_align:
             if alignCode is None:
-                self.__alignmentRow += '-----|'
+                self.__alignmentRow += ':----|'
             elif alignCode == 0:
                 self.__alignmentRow += ':---:|'
             else:
