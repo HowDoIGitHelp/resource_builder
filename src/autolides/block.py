@@ -22,10 +22,13 @@ def isImageBlock(paragraph:Paragraph):
 
 def isMathBlock(paragraph:Paragraph, mathFence = '$$') -> bool:
     '''
-    mathblocks are not native to commonmark or mistletoe, this function checks if a paragraph is surrounded by the math fence token
+    mathblocks are not native to commonmark or mistletoe, 
+    this function checks if a paragraph is surrounded by the math fence token
     '''
-    startsWithDollars = isinstance(paragraph.children[0], RawText) and paragraph.children[0].content.startswith(mathFence)
-    endsWithDollars = isinstance(paragraph.children[-1], RawText) and paragraph.children[-1].content.endswith(mathFence)
+    startsWithDollars = (isinstance(paragraph.children[0], RawText) and
+                         paragraph.children[0].content.startswith(mathFence))
+    endsWithDollars = (isinstance(paragraph.children[-1], RawText) and 
+                       paragraph.children[-1].content.endswith(mathFence))
     return startsWithDollars and endsWithDollars
 
 def isInvisible(token:Token):
@@ -45,7 +48,8 @@ class Block(ABC):
 
     def itemized(self, level=0, indentSize=0, leader=''):
         '''
-        Any block can be itemized (used as a list item), a single block when itemized returns a list containing one IndentedListItem
+        Any block can be itemized (used as a list item),
+        a single block when itemized returns a list containing one IndentedListItem
         '''
         return [IndentedListItem(self, level=level, indentSize=indentSize, leader=leader)]
 
