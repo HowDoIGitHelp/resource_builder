@@ -10,8 +10,8 @@ def main(args):
     file = open(args.source, 'r')
     processedMD = preprocess(file)
     currentHead = None
-    preamble = open('slidesPre.html','r').read().replace('{Title}', args.source)
-    postamble = open('slidesPost.html','r').read()
+    preamble = open('../../slidesPre.html','r').read().replace('{Title}', args.source)
+    postamble = open('../../slidesPost.html','r').read()
 
     if args.output is not None:
         outputFileName = args.output
