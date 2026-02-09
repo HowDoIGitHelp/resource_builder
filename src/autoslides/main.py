@@ -1,4 +1,4 @@
-from mdPreprocess import preprocess
+from mdPreprocess import preprocess, truncatedFrontmatter
 from block import asBlock
 from mistletoe import Document
 from mistletoe.block_token import Heading
@@ -8,7 +8,8 @@ import argparse
 
 def main(args):
     file = open(args.source, 'r')
-    processedMD = preprocess(file)
+    truncatedMD = truncatedFrontmatter(file.read())
+    processedMD = preprocess(truncatedMD)
     currentHead = None
     preamble = open('../../slidesPre.html','r').read().replace('{Title}', args.source)
     postamble = open('../../slidesPost.html','r').read()

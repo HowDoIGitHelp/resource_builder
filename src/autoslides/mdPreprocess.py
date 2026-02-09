@@ -24,12 +24,27 @@ class ProcessedParagraph(ProcessedBlockToken):
         rawSentences = re.split(r'\.\ ', rawParagraph)
         return '.\n'.join([sentence for sentence in rawSentences if sentence != '']) + '\n'
 
-def preprocess(file):
+def preprocess(contents: str) -> str:
     processedContents = ''
-    for child in Document(file).children:
+    for child in Document(contents).children:
         if isinstance(child, Paragraph):
             processedContents += f'{ProcessedParagraph(child).processedRender()}\n'
         else:
             processedContents += f'{ProcessedBlockToken(child).processedRender()}\n'
 
     return processedContents
+
+def truncatedFrontmatter(contents: str) -> str:
+    lines = contents.split("\n")
+    trueStart = 0
+    if lines[0] == "---":
+        trueStart = 1
+        i = 1
+        while lines[i] != "---":
+            i += 1
+        if i < len(lines):
+            trueStart = i + 1
+    print(trueStart)
+    return "\n".join(lines[trueStart:])
+
+
