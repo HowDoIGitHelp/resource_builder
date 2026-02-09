@@ -1,0 +1,16 @@
+LICENSE
+pyproject.toml
+src/autoslides/ASTcollapser.py
+src/autoslides/__init__.py
+src/autoslides/args.py
+src/autoslides/block.py
+src/autoslides/component.py
+src/autoslides/head.py
+src/autoslides/main.py
+src/autoslides/mdPreprocess.py
+src/autoslides/mistletoeExtension.py
+src/autoslides/utils.py
+src/autoslides.egg-info/PKG-INFO
+src/autoslides.egg-info/SOURCES.txt
+src/autoslides.egg-info/dependency_links.txt
+src/autoslides.egg-info/top_level.txt
