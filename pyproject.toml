@@ -13,8 +13,10 @@ license-files = ["LICENSE"]
 [project.urls]
 Homepage = "https://github.com/HowDoIGitHelp/resource_builder.git"
 
+[project.scripts]
+autoslides = "autoslides.main:main"
 
 [build-system]
 requires = ["setuptools"]
-build-backed = "setuptools.build_meta"
+build-backend = "setuptools.build_meta"
 
