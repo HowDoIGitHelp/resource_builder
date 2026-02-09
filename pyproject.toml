@@ -14,7 +14,7 @@ license-files = ["LICENSE"]
 Homepage = "https://github.com/HowDoIGitHelp/resource_builder.git"
 
 
-[build-sustem]
+[build-system]
 requires = ["setuptools"]
 build-backed = "setuptools.build_meta"
 
