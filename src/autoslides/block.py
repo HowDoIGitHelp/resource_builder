@@ -16,6 +16,10 @@ class UnsupportedTokenException(Exception):
     def __init__(self, token:BlockToken):
         self.unsupportedToken = token
 
+class InvalidStateException(Exception):
+
+    def __init__(self, message:str):
+        self.message = message
 
 def isImageBlock(paragraph:Paragraph):
     return len(paragraph.children) == 1 and isinstance(paragraph.children[0], Image)
@@ -39,6 +43,44 @@ def isInvisible(token:Token):
     else:
         return False
 
+def asParagraphs(paragraph: Paragraph):
+    '''
+    this helper function is used to break down a paragraph into multiple paragraphs
+    a new paragraph is started for every linebreak,
+    except when said linebreak is inside a mathblock
+    '''
+    '''
+    create paragraph math blocks based on pairs of rawtext$$
+    '''
+    paragraphSpans = []
+    accumulatedSpans = []
+    insideMathBlock = False
+    for child in paragraph.children:
+        print(accumulatedSpans)
+        print(paragraphSpans)
+        if isinstance(child, RawText) and child.content == "$$" and not insideMathBlock:
+            print("branch 1")
+            insideMathBlock = True #mark start of math block
+            paragraphSpans.append(accumulatedSpans.copy()) #complete a span list and submit to paragraphSpans
+            accumulatedSpans = [] #start a new accumulatedSpans
+            accumulatedSpans.append(child) #add the opening $$ to accumulatedSpans
+        elif isinstance(child, RawText) and child.content == "$$" and insideMathBlock:
+            print("branch 2")
+            insideMathBlock = False #mark the end of math block
+            accumulatedSpans.append(child) #add the closing $$ to accumulatedSpans
+            paragraphSpans.append(accumulatedSpans.copy()) #complete a span list and submit to paragraphSpans
+            accumulatedSpans = [] #start a new accumulatedSpans
+        elif not isinstance(child, LineBreak) or insideMathBlock:
+            print("branch 3")
+            accumulatedSpans.append(child)
+        elif isinstance(child, LineBreak) and not insideMathBlock:
+            print("branch 4")
+            paragraphSpans.append(accumulatedSpans.copy())
+            accumulatedSpans = []
+        else:
+            raise InvalidStateException("INVALID BRANCH")
+
+    return paragraphSpans
 
 class Block(ABC):
 
@@ -66,6 +108,13 @@ class Block(ABC):
 
     def isLooseItem(self):
         return False
+
+    def quotedStr(self):
+        '''
+        Returns the same block but quoted.
+        '''
+        return "> " + "\n> ".join(str(self).split("\n"))
+            
 
 
 def asBlock(token:BlockToken, verbose = True) -> Block:
@@ -311,13 +360,13 @@ class QuoteBlock(CompositeBlock):
         md += f'# {head.headText()}\n'
         md += '\n'
         for line in components:
-            md += f'> {line}\n'
+            md += f'{line.quotedStr()}\n> \n'
         return md
 
     def __str__(self) -> str:
         cumulativeString = ''
         for child in self.__children:
-            cumulativeString += f'> {child} '
+            cumulativeString += f'{child.quotedStr()}\n'
         return cumulativeString[:-1]
 
     def height(self, lineWidth=LINEWIDTH) -> int:
@@ -374,12 +423,12 @@ class MathBlock(CompositeBlock):
     def __str__(self) -> str:
         cumulativeString = ''
         for component in self.__lines:
-            cumulativeString += f'{str(component)} \\\\' 
+            cumulativeString += f'{str(component)}\\\\\n' 
 
         if self.__isAligned:
-            return '<div> $$ \\begin{aligned} ' + cumulativeString + ' \\end{aligned} $$ </div>'
+            return '`\n$$\n\\begin{aligned}\n' + cumulativeString + '\\end{aligned}\n$$\n`'
         else:
-            return '<div> $$ ' + cumulativeString + ' $$ </div>'
+            return '`\n$$\n' + cumulativeString + '$$\n`'
 
 
 class TableBlock(CompositeBlock):
