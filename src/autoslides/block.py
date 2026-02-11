@@ -369,12 +369,6 @@ class QuoteBlock(CompositeBlock):
             cumulativeString += f'{child.quotedStr()}\n'
         return cumulativeString[:-1]
 
-    def height(self, lineWidth=LINEWIDTH) -> int:
-        cumulativeHeight = 0
-        for child in self.__children:
-            cumulativeHeight += math.ceil(len(str(child)) / lineWidth)#change height calculation
-        return cumulativeHeight
-
 
 class MathBlock(CompositeBlock):
 
