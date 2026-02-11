@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+    <head>
+  <title>../../ptest.md</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="slides.css">
+    </head>
+        <body>
+            <textarea id="source">
+class: center, middle
+# header one
+
+---
+# header one
+
+- Paragraph with *line breaking emphases*
+
+
+---
+
+# header one
+
+- Paragraphs with ***strong* *emphasis***.
+- Paragraph $1+3-3$ **is a paragraph**.
+- I *should* be **part of** `the previous` paragraph
+
+
+---
+
+class: center, middle
+# math
+
+---
+# math
+
+`
+$$
+\begin{aligned}
+P(n,r)&=\frac{n!}{(n-r)!}\\
+P(n,r)&=\frac{n(n-1)(n-2)\cdots(n-r+1)(n-r)(n-r-1)(n-r-2)\cdots(1)}{(n-r)(n-r-1)(n-r-2)\cdots(1)}\\
+\end{aligned}
+$$
+`
+
+---
+
+# math
+
+- The product $(n-r)(n-r-1)(n-r-2)\cdots(1)$ gets **cancelled** out leaving:
+
+
+---
+
+# math
+
+`
+$$
+P(n,r)=n(n-1)(n-2)\cdots(n-r+1)\\
+$$
+`
+
+---
+
+class: center, middle
+# math quote
+
+---
+# math quote
+
+> what if it begins like this
+> 
+> `
+> $$
+> \begin{aligned}
+> P(n,r)&=\frac{n!}{(n-r)!}\\
+> P(n,r)&=\frac{n(n-1)(n-2)\cdots(n-r+1)(n-r)(n-r-1)(n-r-2)\cdots(1)}{(n-r)(n-r-1)(n-r-2)\cdots(1)}\\
+> \end{aligned}
+> $$
+> `
+> 
+> The product $(n-r)(n-r-1)(n-r-2)\cdots(1)$ gets cancelled out leaving:
+> 
+> $$ P(n,r)=n(n-1)(n-2)\cdots(n-r+1) $$ what if there is another line after
+> 
+
+
+---
+
+class: center, middle
+# quote
+
+---
+# quote
+
+|  | **$a$** | **$b$** | **$c$** | **$d$** |
+|----:|:----|:---:|:---:|:---:|
+| 1$x$ | **$ax$** | **$bx$** | **$cx$** | **$dx$** |
+| 2**$y$** | **$ay$** | **$by$** | **$cy$** | **$dy$** |
+| 3**$z$** | **$az$** | **$bz$** | **$cz$** | **$dz$** |
+| 4$x$ | **$ax$** | **$bx$** | **$cx$** | **$dx$** |
+| 5**$y$** | **$ay$** | **$by$** | **$cy$** | **$dy$** |
+| 6**$z$** | **$az$** | **$bz$** | **$cz$** | **$dz$** |
+| 7$x$ | **$ax$** | **$bx$** | **$cx$** | **$dx$** |
+| 8**$y$** | **$ay$** | **$by$** | **$cy$** | **$dy$** |
+
+
+---
+
+# quote
+
+|  | **$a$** | **$b$** | **$c$** | **$d$** |
+|----:|:----|:---:|:---:|:---:|
+| 9**$z$** | **$az$** | **$bz$** | **$cz$** | **$dz$** |
+| 10$x$ | **$ax$** | **$bx$** | **$cx$** | **$dx$** |
+| 11**$y$** | **$ay$** | **$by$** | **$cy$** | **$dy$** |
+| 12**$z$** | **$az$** | **$bz$** | **$cz$** | **$dz$** |
+
+
+---
+
+class: center, middle
+# list
+
+---
+# list
+
+- 1 asdasd
+  - 1.1 poop
+  - 1.2
+    - 1.2.1 bar
+      - 1.2.1.1
+
+
+---
+
+class: center, middle
+# list 2
+
+---
+# list 2
+
+1. 1
+   1. 1.1
+2. 2
+   1. 2.2
+
+
+---
+
+class: center, middle
+# quote
+
+---
+# quote
+
+> this is a quot.
+> 
+> is this another child?
+> 
+> Are there 3 or four children
+> 
+> a really long quote
+> 
+> will it be divided
+> 
+> im not sure.
+> 
+> lets try. this is a quot.
+> 
+
+
+---
+
+# quote
+
+> is this another child?
+> 
+> Are there 3 or four children
+> 
+> a really long quote
+> 
+> will it be divided
+> 
+> im not sure.
+> 
+> lets try.
+> 
+
+
+---
+
+class: center, middle
+# quote2
+
+---
+# quote2
+
+> test. test
+> 
+> 1. item1
+> 2. item2
+> 3. item3
+> 
+
+
+---
+
+        </textarea>
+        <script>
+            MathJax = {
+                tex: {
+                    inlineMath: [['$', '$'], ['\\(', '\\)']],    // Inline math delimiters
+                    displayMath: [['$$', '$$'], ['\\[', '\\]']],    // Display math delimiters
+                    packages: {'[+]': ['ams']},    // Load the AMS extensions
+                    processEnvironments: true,     // Required for \begin{align}, \begin{aligned}, etc.
+                },
+                loader: {load: ['[tex]/ams']},    // Explicitly load the 'ams' package
+                options: {
+                    skipHtmlTags: ['script', 'noscript', 'style', 'textarea']
+                }
+            };
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+        <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+        </script>
+        <script>
+            var slideshow = remark.create({ ratio: "16:9" });
+        </script>
+    </body>
+</html>

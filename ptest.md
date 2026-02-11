@@ -10,16 +10,36 @@ another paragraph with [links][1]
 
 ## math
 
+$$
+\begin{aligned}
+P(n,r)&=\frac{n!}{(n-r)!}\\
+P(n,r)&=\frac{n(n-1)(n-2)\cdots(n-r+1)(n-r)(n-r-1)(n-r-2)\cdots(1)}{(n-r)(n-r-1)(n-r-2)\cdots(1)}
+\end{aligned}
+$$
+
+The product $(n-r)(n-r-1)(n-r-2)\cdots(1)$ gets **cancelled** out leaving:
+
+$$
+P(n,r)=n(n-1)(n-2)\cdots(n-r+1)
+$$
+
+## math quote
+
+> what if it begins like this
+>
 > $$
 > \begin{aligned}
 > P(n,r)&=\frac{n!}{(n-r)!}\\
 > P(n,r)&=\frac{n(n-1)(n-2)\cdots(n-r+1)(n-r)(n-r-1)(n-r-2)\cdots(1)}{(n-r)(n-r-1)(n-r-2)\cdots(1)}
 > \end{aligned}
 > $$
-> The product **$(n-r)(n-r-1)(n-r-2)\cdots(1)$** gets cancelled out leaving:
+>
+> The product $(n-r)(n-r-1)(n-r-2)\cdots(1)$ gets cancelled out leaving:
+>
 > $$
 > P(n,r)=n(n-1)(n-2)\cdots(n-r+1)
 > $$
+> what if there is another line after
 
 # quote
 
@@ -56,3 +76,39 @@ another paragraph with [links][1]
 2. 2
    1. 2.2
 
+# quote
+
+> this is a quot.
+>
+> is this another child?
+>
+> Are there 3 or four children
+> 
+> a really long quote
+>
+> will it be divided
+>
+> im not sure.
+> 
+> lets try.
+> this is a quot.
+>
+> is this another child?
+>
+> Are there 3 or four children
+> 
+> a really long quote
+>
+> will it be divided
+>
+> im not sure.
+> 
+> lets try.
+
+
+# quote2
+
+> test. test
+> 1. item1
+> 2. item2
+> 3. item3
