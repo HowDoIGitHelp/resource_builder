@@ -9,7 +9,7 @@ import argparse
 def main(args):
     file = open(args.source, 'r')
     truncatedMD = truncatedFrontmatter(file.read())
-    processedMD = preprocess(truncatedMD)
+    processedMD = truncatedMD #preprocessed is currently skipped due to issues with QuoteBlocks
     currentHead = None
     preamble = open('../../slidesPre.html','r').read().replace('{Title}', args.source)
     postamble = open('../../slidesPost.html','r').read()

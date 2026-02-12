@@ -44,7 +44,6 @@ def truncatedFrontmatter(contents: str) -> str:
             i += 1
         if i < len(lines):
             trueStart = i + 1
-    print(trueStart)
     return "\n".join(lines[trueStart:])
 
 
