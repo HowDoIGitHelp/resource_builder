@@ -12,10 +12,16 @@ h1, h2, h3 {
 .remark-code, .remark-inline-code {
     font-family: 'Ubuntu Mono';
 }
+.remark-slide-content p {
+    margin: 0;
+    max-height: 85%; 
+    display: flex;
+}
 p img {
+    max-height: 100%;
     max-width: 100%;
-    height: auto;
-    display: block;
+    object-fit: contain;
+    margin: auto;
 }
 .remark-slide {
     display: block;
@@ -28,6 +34,7 @@ p img {
     display: flex;
     flex-direction: column;
     height: 95%;
+    overflow: hidden;
     justify-content: space-between;
 }
 .remark-slide-content > :nth-last-child(2) {

@@ -48,9 +48,7 @@ def asParagraphs(paragraph: Paragraph):
     this helper function is used to break down a paragraph into multiple paragraphs
     a new paragraph is started for every linebreak,
     except when said linebreak is inside a mathblock
-    '''
-    '''
-    create paragraph math blocks based on pairs of rawtext$$
+    currently unsused
     '''
     paragraphSpans = []
     accumulatedSpans = []
