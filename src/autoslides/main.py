@@ -10,7 +10,6 @@ def main(args):
     file = open(args.source, 'r')
     truncatedMD = truncatedFrontmatter(file.read())
     processedMD = escapedMathUnderscores(truncatedMD) #preprocessed is currently skipped due to issues with QuoteBlocks
-    print(processedMD)
     currentHead = None
     preamble = open('../../slidesPre.html','r').read().replace('{Title}', args.source)
     postamble = open('../../slidesPost.html','r').read()

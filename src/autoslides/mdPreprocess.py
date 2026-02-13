@@ -35,7 +35,6 @@ def preprocess(contents: str) -> str:
     return processedContents
 
 def escapedMathUnderscores(contents: str) -> str:
-    print("replacing underscores in math with escaped underscores")
     return re.sub(r'(?<!\$)\$([^$]+)\$(?!\$)', lambda m: m.group(0).replace('_', r'\_'), contents)
 
 def truncatedFrontmatter(contents: str) -> str:
