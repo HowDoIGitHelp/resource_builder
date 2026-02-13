@@ -35,7 +35,10 @@ def preprocess(contents: str) -> str:
     return processedContents
 
 def escapedMathUnderscores(contents: str) -> str:
-    return re.sub(r'(?<!\$)\$([^$]+)\$(?!\$)', lambda m: m.group(0).replace('_', r'\_'), contents)
+    pattern = r'(?<!\$)\$([^$]+)\$(?!\$)'
+    escapedUnderscores = re.sub(pattern, lambda m: m.group(0).replace('_', r'\_'), contents)
+    fixedLinebreaks = re.sub(pattern, lambda m: m.group(0).replace('\\', '\\\\'), contents)
+    return fixedLinebreaks
 
 def truncatedFrontmatter(contents: str) -> str:
     lines = contents.split("\n")
