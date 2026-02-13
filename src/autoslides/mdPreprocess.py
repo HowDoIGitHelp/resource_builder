@@ -18,26 +18,26 @@ class ProcessedParagraph(ProcessedBlockToken):
     def processedRender(self):
         with MarkdownRenderer() as renderer:
             rawParagraph = renderer.render(self.__blockToken)
-        rawParagraph = rawParagraph.replace('\n',' ')
-        rawParagraph = rawParagraph.replace('$$ ', '$$\n')
-        rawParagraph = rawParagraph.replace(' $$', '\n$$')
-        rawSentences = re.split(r'\.\ ', rawParagraph)
-        return '.\n'.join([sentence for sentence in rawSentences if sentence != '']) + '\n'
+        rawParagraph = rawParagraph.replace("\n"," ")
+        rawParagraph = rawParagraph.replace("$$ ", "$$\n")
+        rawParagraph = rawParagraph.replace(" $$", "\n$$")
+        rawSentences = re.split(r"\.\ ", rawParagraph)
+        return ".\n".join([sentence for sentence in rawSentences if sentence != ""]) + "\n"
 
 def preprocess(contents: str) -> str:
-    processedContents = ''
+    processedContents = ""
     for child in Document(contents).children:
         if isinstance(child, Paragraph):
-            processedContents += f'{ProcessedParagraph(child).processedRender()}\n'
+            processedContents += f"{ProcessedParagraph(child).processedRender()}\n"
         else:
-            processedContents += f'{ProcessedBlockToken(child).processedRender()}\n'
+            processedContents += f"{ProcessedBlockToken(child).processedRender()}\n"
 
     return processedContents
 
 def escapedMathUnderscores(contents: str) -> str:
-    pattern = r'(?<!\$)\$([^$]+)\$(?!\$)'
-    escapedUnderscores = re.sub(pattern, lambda m: m.group(0).replace('_', r'\_'), contents)
-    fixedLinebreaks = re.sub(pattern, lambda m: m.group(0).replace('\\', '\\\\'), contents)
+    pattern = r"(?<!\$)\$([^$]+)\$(?!\$)"
+    escapedUnderscores = re.sub(pattern, lambda m: m.group(0).replace("_", r"\_"), contents)
+    fixedLinebreaks = re.sub(pattern, lambda m: m.group(0).replace("\\", "\\\\"), contents)
     return fixedLinebreaks
 
 def truncatedFrontmatter(contents: str) -> str:

@@ -24,11 +24,11 @@ class InvalidStateException(Exception):
 def isImageBlock(paragraph:Paragraph):
     return len(paragraph.children) == 1 and isinstance(paragraph.children[0], Image)
 
-def isMathBlock(paragraph:Paragraph, mathFence = '$$') -> bool:
-    '''
+def isMathBlock(paragraph:Paragraph, mathFence = "$$") -> bool:
+    """
     mathblocks are not native to commonmark or mistletoe, 
     this function checks if a paragraph is surrounded by the math fence token
-    '''
+    """
     startsWithDollars = (isinstance(paragraph.children[0], RawText) and
                          paragraph.children[0].content.startswith(mathFence))
     endsWithDollars = (isinstance(paragraph.children[-1], RawText) and 
@@ -44,12 +44,12 @@ def isInvisible(token:Token):
         return False
 
 def asParagraphs(paragraph: Paragraph):
-    '''
+    """
     this helper function is used to break down a paragraph into multiple paragraphs
     a new paragraph is started for every linebreak,
     except when said linebreak is inside a mathblock
     currently unsused
-    '''
+    """
     paragraphSpans = []
     accumulatedSpans = []
     insideMathBlock = False
@@ -86,39 +86,39 @@ class Block(ABC):
     def height(self) -> int:
         pass
 
-    def itemized(self, level=0, indentSize=0, leader=''):
-        '''
+    def itemized(self, level=0, indentSize=0, leader=""):
+        """
         Any block can be itemized (used as a list item),
         a single block when itemized returns a list containing one IndentedListItem
-        '''
+        """
         return [IndentedListItem(self, level=level, indentSize=indentSize, leader=leader)]
 
     @abstractmethod
     def slideContent(self, components, head:Head):
-        '''
+        """
         slideContent builds a slide based on given components and header.
         The slide built depends on the type of block
-        '''
+        """
         pass
 
     def mdSlides(self, head:Head, lines=LINES):
-        return f'{self.slideContent(head)}\n---\n\n' 
+        return f"{self.slideContent(head)}\n---\n\n" 
 
     def isLooseItem(self):
         return False
 
     def quotedStr(self):
-        '''
+        """
         Returns the same block but quoted.
-        '''
+        """
         return "> " + "\n> ".join(str(self).split("\n"))
             
 
 
 def asBlock(token:BlockToken, verbose = True) -> Block:
-    '''
+    """
     convert mistletoe.block_token.BlockToken into Blocks
-    '''
+    """
     if isinstance(token, Paragraph) and isMathBlock(token):
         return MathBlock(token)
     elif isinstance(token, Paragraph) and isImageBlock(token):
@@ -142,9 +142,9 @@ def asBlock(token:BlockToken, verbose = True) -> Block:
 
 
 class CompositeBlock(Block):
-    '''
+    """
     composite blocks can be split into multiple slides, split is based on number of lines
-    '''
+    """
 
     def slides(self, head:Head, lines=LINES, lineWidth=LINEWIDTH) -> list:
         if len(self.components()) == 0:
@@ -164,10 +164,10 @@ class CompositeBlock(Block):
         return slides
 
     def mdSlides(self, head:Head, lines=LINES) -> str:
-        subDeck = ''
+        subDeck = ""
         for slide in self.slides(head, lines):
-            subDeck += f'{slide}\n'
-            subDeck += '\n---\n\n'
+            subDeck += f"{slide}\n"
+            subDeck += "\n---\n\n"
         return subDeck
 
     @abstractmethod
@@ -190,9 +190,9 @@ class ParagraphBlock(CompositeBlock):
             self.__sentences = [sentence for sentence in self.__sentences if (isinstance(sentence, EmphasizedSentence) or isinstance(sentence, StrongSentence))]
 
     def decompose(self) -> list:
-        '''
+        """
         Decompose a paragraph into list of span tokens based on SoftBreaks (single line breaks)
-        '''
+        """
         spanTokenList = []
         for child in self.__mdParagraph.children:
             if isinstance(child, RawText):
@@ -214,18 +214,18 @@ class ParagraphBlock(CompositeBlock):
         return self.__sentences
 
     def slideContent(self, components:list, head:Head) -> str:
-        md = ''
-        md += f'# {head.headText()}\n'
-        md += '\n'
+        md = ""
+        md += f"# {head.headText()}\n"
+        md += "\n"
         for sentence in components:
-            md += f'- {sentence}\n'
+            md += f"- {sentence}\n"
         return md
 
     def __str__(self) -> str:
-        cumulativeString = ''
+        cumulativeString = ""
         for sentence in self.__sentences:
-            cumulativeString += f'{sentence} '
-        return f'{cumulativeString[:-1]}'
+            cumulativeString += f"{sentence} "
+        return f"{cumulativeString[:-1]}"
 
     def isLooseItem(self):
         return True
@@ -249,30 +249,30 @@ class Item:
     def content(self):
         return self.__content
 
-    def itemized(self, level=0, indentSize=0, leader=''):
-        '''
+    def itemized(self, level=0, indentSize=0, leader=""):
+        """
         itemizing an item returns the item and any nested list items children
-        '''
+        """
         itemsDFS = []
         if len(self.__children) > 0:
             itemsDFS += self.__children[0].itemized(
                     level=level+1, 
                     indentSize=self.__indentSize, 
-                    leader=f'{self.__leader} '
+                    leader=f"{self.__leader} "
             )
             for child in self.__children[1:]:
                 #itemsDFS.append(child)
-                itemsDFS += child.itemized(level=level+1, indentSize=self.__indentSize, leader='')
+                itemsDFS += child.itemized(level=level+1, indentSize=self.__indentSize, leader="")
         return itemsDFS
     
     def __str__(self) -> str:
         components = self.itemized()
-        md = ''
-        md += f'{components[0]}\n'
+        md = ""
+        md += f"{components[0]}\n"
         for i in range(1, len(components)):
             if components[i].isLooseItem() and components[i].level() == components[i-1].level():
-                md += '\n'
-            md += f'{components[i]}\n'
+                md += "\n"
+            md += f"{components[i]}\n"
         return md
 
     def components(self) -> list:
@@ -297,7 +297,7 @@ class ListBlock(CompositeBlock):
     def nthItem(self, n:int) -> Block:
         return self.__items[n]
     
-    def itemized(self, level=0, indentSize=0, leader='') -> list:
+    def itemized(self, level=0, indentSize=0, leader="") -> list:
         itemsDFS = []
         for item in self.__children:
             itemsDFS += item.itemized(level=level, indentSize=indentSize, leader=leader)
@@ -307,17 +307,17 @@ class ListBlock(CompositeBlock):
         return self.__children
 
     def __str__(self) -> str:
-        cumulativeString = ''
+        cumulativeString = ""
         for items in self.itemized():
-            cumulativeString += f'{items}\n'
+            cumulativeString += f"{items}\n"
         return cumulativeString[:-1]
 
     def slideContent(self, components:list, head:Head) -> str:
-        md = ''
-        md += f'# {head.headText()}\n'
-        md += '\n'
+        md = ""
+        md += f"# {head.headText()}\n"
+        md += "\n"
         for component in components:
-            md += f'{component}'
+            md += f"{component}"
         return md
 
 class CodeBlock(CompositeBlock):
@@ -325,20 +325,20 @@ class CodeBlock(CompositeBlock):
     def __init__(self, mdCodeFence:CodeFence):
         self.__language = mdCodeFence.language
         self.__lines = []
-        for lineContent in mdCodeFence.children[0].content.split('\n'):
+        for lineContent in mdCodeFence.children[0].content.split("\n"):
             self.__lines.append(CodeLine(lineContent))
 
     def components(self):
         return self.__lines
 
     def slideContent(self, components:list, head:Head) -> str:
-        md = ''
-        md += f'# {head.headText()}\n'
-        md += '\n'
-        md += f'```{self.__language}\n'
+        md = ""
+        md += f"# {head.headText()}\n"
+        md += "\n"
+        md += f"```{self.__language}\n"
         for line in components:
-            md += f'{line}\n'
-        md += '```'
+            md += f"{line}\n"
+        md += "```"
         return md
 
 
@@ -354,17 +354,17 @@ class QuoteBlock(CompositeBlock):
         return self.__children
 
     def slideContent(self, components:list, head:Head) -> str:
-        md = ''
-        md += f'# {head.headText()}\n'
-        md += '\n'
+        md = ""
+        md += f"# {head.headText()}\n"
+        md += "\n"
         for line in components:
-            md += f'{line.quotedStr()}\n> \n'
+            md += f"{line.quotedStr()}\n> \n"
         return md
 
     def __str__(self) -> str:
-        cumulativeString = ''
+        cumulativeString = ""
         for child in self.__children:
-            cumulativeString += f'{child.quotedStr()}\n'
+            cumulativeString += f"{child.quotedStr()}\n"
         return cumulativeString[:-1]
 
 
@@ -373,54 +373,54 @@ class MathBlock(CompositeBlock):
     def __init__(self, mdParagraph:Paragraph):
         self.__isAligned = False
         jointLines = rawTex(mdParagraph) 
-        if jointLines.startswith('\\begin{aligned}') and jointLines.endswith('\\end{aligned}'):
+        if jointLines.startswith("\\begin{aligned}") and jointLines.endswith("\\end{aligned}"):
             self.__isAligned = True
             jointLines = jointLines[15:-13]
-        multilineEnvironments = ['bmatrix','matrix']
+        multilineEnvironments = ["bmatrix","matrix"]
         extractedBlocks = {}
         #remove all multiline blocks (e.g. matrices) while saving removed blocks to extractedBlocks
         for env in multilineEnvironments:
             exME = extractedMathEnvironments(jointLines, env)
-            jointLines = exME['replacedMathBlock']
-            extractedBlocks[env] = exME['extractedBlocks']
+            jointLines = exME["replacedMathBlock"]
+            extractedBlocks[env] = exME["extractedBlocks"]
         #now that all multiline blocks are gone, replace newline separators with $$nl$$ token
         #this replacement is now safe since there are no multiline environments in the string
-        jointLines = jointLines.replace('\\\\', '$$nl$$')
+        jointLines = jointLines.replace("\\\\", "$$nl$$")
         #place all extracted blocks back
         for env in multilineEnvironments:
             for block in extractedBlocks[env]:
-                jointLines = jointLines.replace(f'$${env}$$', block, 1)
+                jointLines = jointLines.replace(f"$${env}$$", block, 1)
         #safely split the math block using the $$nl$$ token
-        self.__lines = [MathLine(line) for line in jointLines.split('$$nl$$')]
+        self.__lines = [MathLine(line) for line in jointLines.split("$$nl$$")]
 
     def components(self):
         return self.__lines
 
     def slideContent(self, components:list, head:Head) -> str:
-        md = ''
-        md += f'# {head.headText()}\n'
-        md += '\n'
-        md += f'`\n$$\n'
+        md = ""
+        md += f"# {head.headText()}\n"
+        md += "\n"
+        md += f"`\n$$\n"
         if self.__isAligned:
-            md += '\\begin{aligned}\n'
+            md += "\\begin{aligned}\n"
         for line in components:
-            md += f'{line}\\\\\n'
+            md += f"{line}\\\\\n"
         if len(components) > 0:
-            md = f'{md[:-1]}\n'#remove the latex newline '\\' on the last line  
+            md = f"{md[:-1]}\n"#remove the latex newline "\\" on the last line  
         if self.__isAligned:
-            md += '\\end{aligned}\n'
-        md += '$$\n`'
+            md += "\\end{aligned}\n"
+        md += "$$\n`"
         return md
 
     def __str__(self) -> str:
-        cumulativeString = ''
+        cumulativeString = ""
         for component in self.__lines:
-            cumulativeString += f'{str(component)}\\\\\n' 
+            cumulativeString += f"{str(component)}\\\\\n" 
 
         if self.__isAligned:
-            return '`\n$$\n\\begin{aligned}\n' + cumulativeString + '\\end{aligned}\n$$\n`'
+            return "`\n$$\n\\begin{aligned}\n" + cumulativeString + "\\end{aligned}\n$$\n`"
         else:
-            return '`\n$$\n' + cumulativeString + '$$\n`'
+            return "`\n$$\n" + cumulativeString + "$$\n`"
 
 
 class TableBlock(CompositeBlock):
@@ -428,14 +428,14 @@ class TableBlock(CompositeBlock):
     def __init__(self, content:Table):
         self.__header = Row(content.header)
         self.__rows = [Row(child) for child in content.children]
-        self.__alignmentRow = '|' if len(content.header.children) > 0 else ''
+        self.__alignmentRow = "|" if len(content.header.children) > 0 else ""
         for alignCode in content.column_align:
             if alignCode is None:
-                self.__alignmentRow += ':----|'
+                self.__alignmentRow += ":----|"
             elif alignCode == 0:
-                self.__alignmentRow += ':---:|'
+                self.__alignmentRow += ":---:|"
             else:
-                self.__alignmentRow += '----:|'
+                self.__alignmentRow += "----:|"
 
 
     def height(self, lineWidth=LINEWIDTH):
@@ -448,13 +448,13 @@ class TableBlock(CompositeBlock):
         return self.__rows
 
     def slideContent(self, components:list, head:Head):
-        md = ''
-        md += f'# {head.headText()}\n'
-        md += '\n'
-        md += f'{str(self.__header)}\n'
-        md += f'{str(self.__alignmentRow)}\n'
+        md = ""
+        md += f"# {head.headText()}\n"
+        md += "\n"
+        md += f"{str(self.__header)}\n"
+        md += f"{str(self.__alignmentRow)}\n"
         for row in components:
-            md += f'{str(row)}\n'
+            md += f"{str(row)}\n"
         return md
 
 
@@ -470,9 +470,9 @@ class ImageBlock(Block):
         return 1
 
     def slideContent(self, head:Head):
-        md = ''
-        md += f'# {head.headText()}\n'
-        md += '\n'
-        md += f'![{self.__altText}]({self.__src})'
-        md += '\n'
+        md = ""
+        md += f"# {head.headText()}\n"
+        md += "\n"
+        md += f"![{self.__altText}]({self.__src})"
+        md += "\n"
         return md
