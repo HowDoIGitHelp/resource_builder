@@ -1,10 +1,11 @@
-# header one
+# header first
 
 Paragraph with *line breaking emphases*
 
 Paragraphs with ***strong* *emphasis***.
 Paragraph $1+3-3$ **is a paragraph**.
- I *should* be **part of** `the previous` paragraph
+Line with **math** with underscores: $\log_2 n$ and $\log_2 5$ and $\log_3 5$.
+I *should* be **part of** `the previous` paragraph.
 
 another paragraph with [links][1]
 
