@@ -28,13 +28,14 @@ def main(args):
             if currentHead.level() < 4:
                 output.write(currentHead.mdSlides())
         else:
-            output.write(asBlock(child, verbose = False).mdSlides(head = currentHead))
+            output.write(asBlock(child, verbose = args.verbose).mdSlides(head = currentHead))
 
     output.write(postamble)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--source")
-    parser.add_argument("-o", "--output")
+    parser.add_argument("source", type = str, help = "markdown source file path")
+    parser.add_argument("output", type = str, help = "html output file path")
+    parser.add_argument("-v", "--verbose", action = "store_true", help = "enable complete paragraph rendering")
     args = parser.parse_args()
     main(args)
