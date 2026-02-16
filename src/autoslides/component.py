@@ -7,9 +7,9 @@ import math
 
 
 class Component(ABC):
-    '''
+    """
     CompositeBlocks are made up of Components
-    '''
+    """
 
     @abstractmethod
     def height(self, lineWidth=LINEWIDTH):
@@ -17,9 +17,9 @@ class Component(ABC):
 
 
 class Sentence(Component):
-    '''
+    """
     base class that can be decorated by StrongSentence and EmphasizedSentence
-    '''
+    """
 
     def __init__(self,sentence:str):
         self.__sentence = sentence
@@ -77,16 +77,16 @@ class EmphasizedSentence(Sentence):
 
 class IndentedListItem(Component):
 
-    def __init__(self, content:'Block', indentSize=0, level=0, leader=''):
+    def __init__(self, content:"Block", indentSize=0, level=0, leader=""):
         self.__level = level
         self.__content = content
         self.__leader = leader
         self.__indentSize = indentSize
-        self.__prefix = ' ' * ((indentSize * level) - len(leader))
+        self.__prefix = " " * ((indentSize * level) - len(leader))
         self.__prefix += leader
 
     def __str__(self) -> str:
-        return f'{self.__prefix}{self.__content}'
+        return f"{self.__prefix}{self.__content}"
 
     def height(self, lineWidth=LINEWIDTH) -> int:
         return math.ceil(len(str(self)) / lineWidth)
@@ -116,7 +116,7 @@ class MathLine(Component):
         self.__mathTeX = mathTeX
 
     def height(self, lineWidth=LINEWIDTH):
-        return self.__mathTeX.count('\\\\') + 1
+        return self.__mathTeX.count("\\\\") + 1
 
     def __str__(self) -> str:
         return self.__mathTeX
@@ -148,15 +148,15 @@ class Row(Component):
         return tallestCell.height(lineWidth)
 
     def __str__(self) -> str:
-        cumulativeString = '|' if len(self.__cells) > 0 else '' 
+        cumulativeString = "|" if len(self.__cells) > 0 else "" 
         for cell in self.__cells:
-            cumulativeString += f' {str(cell)} |'
+            cumulativeString += f" {str(cell)} |"
         return cumulativeString
 
 def collapse(spanList:list) -> Sentence:
-    '''
+    """
     Collapses a list of span tokens and returns Sentence
-    '''
+    """
     emphasizedParts = []
     strongParts = []
     mdSpanList = []
@@ -168,7 +168,7 @@ def collapse(spanList:list) -> Sentence:
         with MarkdownRenderer() as renderer:
             mdSpanList.append(renderer.render(token)[:-1])
 
-    s = Sentence(''.join(mdSpanList))
+    s = Sentence("".join(mdSpanList))
     if len(emphasizedParts) > 0:
         s = EmphasizedSentence(s,emphasizedParts)
     if len(strongParts) > 0:
