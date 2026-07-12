@@ -3,12 +3,12 @@ from mistletoe.markdown_renderer import MarkdownRenderer, LinkReferenceDefinitio
 from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken, CodeFence, Quote, Table, TableRow, TableCell
 from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis, Image, EscapeSequence, SpanToken
 from mistletoe.token import Token
-from head import Head
+from autoslides.head import Head
 import math
 import re
-from args import LINES, LINEWIDTH
-from component import Component, IndentedListItem, Sentence, MathLine, CodeLine, Row, StrongSentence, EmphasizedSentence, collapse
-from utils import rawTex, extractedMathEnvironments, delimitedTextToken, SentenceDelimiter
+from autoslides.args import LINES, LINEWIDTH
+from autoslides.component import Component, IndentedListItem, Sentence, MathLine, CodeLine, Row, StrongSentence, EmphasizedSentence, collapse
+from autoslides.utils import rawTex, extractedMathEnvironments, delimitedTextToken, SentenceDelimiter
 
 
 class UnsupportedTokenException(Exception):

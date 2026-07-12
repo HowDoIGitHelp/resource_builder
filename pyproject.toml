@@ -1,6 +1,6 @@
 [project]
 name = "autoslides"
-version = "0.1.0"
+version = "0.1.1"
 authors = [
     { name = "Rubelito Abella", email = "bbadoodles@gmail.com" },
 ]
@@ -9,6 +9,9 @@ readme = "README.md"
 requires-python = ">=3.14"
 license = "MIT"
 license-files = ["LICENSE"]
+dependencies = [
+    "mistletoe>=1.5.1",
+]
 
 [project.urls]
 Homepage = "https://github.com/HowDoIGitHelp/resource_builder.git"
@@ -20,3 +23,5 @@ autoslides = "autoslides.main:main"
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptool.package-data]
+autoslides = ["slidesPre.html", "slidesPost.html", "slides.css"]

@@ -1,6 +1,6 @@
 from mistletoe.block_token import Heading
-from component import collapse
-from args import LINEWIDTH
+from autoslides.component import collapse
+from autoslides.args import LINEWIDTH
 
 class Head:
 

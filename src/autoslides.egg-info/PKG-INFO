@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: autoslides
-Version: 0.1.0
+Version: 0.1.1
 Summary: Convert markdown documents into summarized slides
 Author-email: Rubelito Abella <bbadoodles@gmail.com>
 License-Expression: MIT
@@ -8,4 +8,5 @@ Project-URL: Homepage, https://github.com/HowDoIGitHelp/resource_builder.git
 Requires-Python: >=3.14
 Description-Content-Type: text/markdown
 License-File: LICENSE
+Requires-Dist: mistletoe>=1.5.1
 Dynamic: license-file

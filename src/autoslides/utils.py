@@ -1,7 +1,7 @@
 from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken, CodeFence, Quote, Table, TableRow, TableCell
 from mistletoe.span_token import RawText, Emphasis, Strong, SpanToken, EscapeSequence
-from args import LINEWIDTH
-from component import collapse
+from autoslides.args import LINEWIDTH
+from autoslides.component import collapse
 import re
 from string import Template
 

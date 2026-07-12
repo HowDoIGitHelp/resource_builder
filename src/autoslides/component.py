@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from args import LINEWIDTH
+from autoslides.args import LINEWIDTH
 from mistletoe.block_token import TableCell, TableRow
 from mistletoe.span_token import Emphasis, Strong
 from mistletoe.markdown_renderer import MarkdownRenderer
