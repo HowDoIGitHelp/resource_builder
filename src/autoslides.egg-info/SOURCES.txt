@@ -1,4 +1,5 @@
 LICENSE
+README.md
 pyproject.toml
 src/autoslides/__init__.py
 src/autoslides/args.py

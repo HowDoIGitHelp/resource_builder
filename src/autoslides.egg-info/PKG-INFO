@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: autoslides
-Version: 0.1.3
+Version: 0.1.4
 Summary: Convert markdown documents into summarized slides
 Author-email: Rubelito Abella <bbadoodles@gmail.com>
 License-Expression: MIT
@@ -10,3 +10,10 @@ Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: mistletoe>=1.5.1
 Dynamic: license-file
+
+# autoslides
+
+This package can be used to convert markdown documents into summarized slides.
+The slides can be rendered using markdown presentation tools like remark.js
+
+This package uses the markdown processor [mistletoe](https://github.com/miyuchina/mistletoe)
