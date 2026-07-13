@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from mistletoe.markdown_renderer import MarkdownRenderer, LinkReferenceDefinition, BlankLine
-from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken, CodeFence, Quote, Table, TableRow, TableCell
+from mistletoe.block_token import Paragraph, Heading, List, ListItem, BlockToken, CodeFence, Quote, Table, TableRow, TableCell, ThematicBreak
 from mistletoe.span_token import LineBreak, RawText, Strong, Emphasis, Image, EscapeSequence, SpanToken
 from mistletoe.token import Token
 from autoslides.head import Head
@@ -112,7 +112,6 @@ class Block(ABC):
         Returns the same block but quoted.
         """
         return "> " + "\n> ".join(str(self).split("\n"))
-            
 
 
 def asBlock(token:BlockToken, verbose = True) -> Block:
@@ -137,6 +136,8 @@ def asBlock(token:BlockToken, verbose = True) -> Block:
         return QuoteBlock(token)
     elif isinstance(token, Table):
         return TableBlock(token)
+    elif isinstance(token, ThematicBreak):
+        return UnrenderedBlock()
     else:
         raise UnsupportedTokenException(token)
 
@@ -179,6 +180,23 @@ class CompositeBlock(Block):
         for component in self.components():
             cumulativeHeight += component.height(lineWidth)
         return cumulativeHeight
+
+
+class UnrenderedBlock(Block):
+    def height(self) -> int:
+        return 0
+
+    def itemized(self, level=0, indentSize=0, leader=""):
+        return []
+
+    def slideContent(self, components, head:Head):
+        return ""
+
+    def mdSlides(self, head:Head, lines=LINES):
+        return ""
+
+    def isLooseItem(self):
+        return True
 
 
 class ParagraphBlock(CompositeBlock):
@@ -264,7 +282,7 @@ class Item:
                 #itemsDFS.append(child)
                 itemsDFS += child.itemized(level=level+1, indentSize=self.__indentSize, leader="")
         return itemsDFS
-    
+
     def __str__(self) -> str:
         components = self.itemized()
         md = ""
