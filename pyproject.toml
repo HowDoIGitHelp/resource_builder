@@ -23,8 +23,11 @@ autoslides = "autoslides.main:main"
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptool.packages.find]
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
 where = ["src"]
 
-[tool.setuptool.package-data]
+[tool.setuptools.package-data]
 autoslides = ["slidesPre.html", "slidesPost.html", "slides.css"]
