@@ -16,7 +16,7 @@ def main():
 
     file = open(args.source, "r")
     truncatedMD = truncatedFrontmatter(file.read())
-    processedMD = escapedMathUnderscores(truncatedMD) #preprocessed is currently skipped due to issues with QuoteBlocks
+    processedMD = escapedMathUnderscores(truncatedMD)
     currentHead = None
     preamblePath = resources.files("autoslides").joinpath("slidesPre.html")
     postamblePath = resources.files("autoslides").joinpath("slidesPost.html")
