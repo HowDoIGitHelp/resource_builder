@@ -8,6 +8,8 @@ src/autoslides/head.py
 src/autoslides/main.py
 src/autoslides/mdPreprocess.py
 src/autoslides/mistletoeExtension.py
+src/autoslides/slidesPost.html
+src/autoslides/slidesPre.html
 src/autoslides/utils.py
 src/autoslides.egg-info/PKG-INFO
 src/autoslides.egg-info/SOURCES.txt
