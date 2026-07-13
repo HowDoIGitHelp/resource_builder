@@ -1,12 +1,12 @@
 [project]
 name = "autoslides"
-version = "0.1.1"
+version = "0.1.2"
 authors = [
     { name = "Rubelito Abella", email = "bbadoodles@gmail.com" },
 ]
 description = "Convert markdown documents into summarized slides"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.13"
 license = "MIT"
 license-files = ["LICENSE"]
 dependencies = [
@@ -22,6 +22,9 @@ autoslides = "autoslides.main:main"
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptool.packages.find]
+where = ["src"]
 
 [tool.setuptool.package-data]
 autoslides = ["slidesPre.html", "slidesPost.html", "slides.css"]
